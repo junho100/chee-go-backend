@@ -1,19 +1,22 @@
 package main
 
 import (
-	"net/http"
+	"chee-go-backend/common"
+	"chee-go-backend/users"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	DB := common.Init()
+	DB.AutoMigrate(&users.User{})
+
 	r := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, Gin!",
-		})
-	})
+	r.SetTrustedProxies(nil)
+
+	serverRoute := r.Group("/api")
+	users.RegisterUsersRouters(serverRoute.Group("/users"))
 
 	r.Run(":8080")
 }
