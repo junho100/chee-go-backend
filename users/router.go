@@ -11,6 +11,7 @@ import (
 func RegisterUsersRouters(router *gin.RouterGroup) {
 	router.POST("/", SignUp)
 	router.GET("/check-id", CheckID)
+	router.POST("/login", Login)
 }
 
 func SignUp(c *gin.Context) {
@@ -51,4 +52,48 @@ func CheckID(c *gin.Context) {
 		IsExists: CheckUserByID(id),
 	}
 	c.JSON(http.StatusOK, response)
+}
+
+func Login(c *gin.Context) {
+	var loginRequest LoginRequest
+
+	if err := c.BindJSON(&loginRequest); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "bad content.",
+		}
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	user, err := GetUserByID(loginRequest.ID)
+
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "login failed.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	if CheckPassword(loginRequest.Password, user.HashedPassword) != nil {
+		response := &common.CommonErrorResponse{
+			Message: "login failed.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	token, err := CreateToken(loginRequest.ID)
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "login failed.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	response := &LoginResponse{
+		Token: token,
+	}
+	c.JSON(http.StatusCreated, response)
 }

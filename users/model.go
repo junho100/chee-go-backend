@@ -2,7 +2,12 @@ package users
 
 import (
 	"chee-go-backend/common"
+	"fmt"
+	"time"
 
+	"os"
+
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,6 +29,15 @@ type CreateUserDto struct {
 
 type CheckIDResponse struct {
 	IsExists bool
+}
+
+type LoginResponse struct {
+	Token string
+}
+
+type LoginRequest struct {
+	ID       string `json:"id"`
+	Password string `json:"password"`
 }
 
 type User struct {
@@ -61,4 +75,40 @@ func CheckUserByID(id string) bool {
 	}
 
 	return true
+}
+
+func GetUserByID(id string) (*User, error) {
+	db := common.GetDB()
+	var user User
+	if err := db.Where(User{
+		ID: id,
+	}).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func CheckPassword(password string, hashedPassword string) error {
+	bytePassword := []byte(password)
+	byteHashedPassword := []byte(hashedPassword)
+	fmt.Println(bytePassword)
+	return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
+}
+
+func CreateToken(id string) (string, error) {
+	var err error
+	secret := os.Getenv("JWT_SECRET")
+	tokenClaim := jwt.MapClaims{}
+	tokenClaim["authorized"] = true
+	tokenClaim["user_id"] = id
+	tokenClaim["exp"] = time.Now().Add(time.Hour * 24 * 30).Unix()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaim)
+	signedToken, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+
+	return signedToken, nil
 }
