@@ -25,6 +25,7 @@ func main() {
 
 	serverRoute := r.Group("/api")
 	users.RegisterUsersRouters(serverRoute.Group("/users"))
+	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"))
 
 	r.Run(":8080")
 }

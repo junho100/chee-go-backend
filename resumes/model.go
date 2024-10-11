@@ -82,3 +82,55 @@ type WorkExperienceDetail struct {
 	WorkExperienceID uint
 	WorkExperience   WorkExperience
 }
+
+type RegisterResumeRequest struct {
+	Introduction    string
+	GithubURL       string
+	BlogURL         string
+	Educations      []RegisterResumeRequestReducation
+	Projects        []RegisterResumeRequestProject
+	Activities      []RegisterResumeRequestActivity
+	Certificates    []RegisterResumeRequestCertificate
+	WorkExperiences []RegisterResumeRequestWorkExperience
+	Keywords        []string
+}
+
+type RegisterResumeRequestReducation struct {
+	SchoolName string
+	MajorName  string
+	StartDate  time.Time
+	EndDate    time.Time
+}
+
+type RegisterResumeRequestProject struct {
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+	GithubURL string
+}
+
+type RegisterResumeRequestActivity struct {
+	Name    string
+	Content string
+}
+
+type RegisterResumeRequestCertificate struct {
+	Name       string
+	IssuedBy   string
+	IssuedDate time.Time
+}
+
+type RegisterResumeRequestWorkExperience struct {
+	CompanyName string
+	Department  string
+	Position    string
+	Job         string
+	Details     []RegisterResumeRequestWorkExperienceDetail
+}
+
+type RegisterResumeRequestWorkExperienceDetail struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
