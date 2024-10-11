@@ -2,6 +2,7 @@ package main
 
 import (
 	"chee-go-backend/common"
+	"chee-go-backend/resumes"
 	"chee-go-backend/users"
 	"log"
 
@@ -16,7 +17,7 @@ func main() {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 	DB := common.Init()
-	DB.AutoMigrate(&users.User{})
+	DB.AutoMigrate(&users.User{}, &resumes.Resume{}, &resumes.Education{}, &resumes.Project{}, &resumes.Keyword{}, &resumes.KeywordResume{}, &resumes.Activity{}, &resumes.Certificate{}, &resumes.WorkExperience{}, &resumes.WorkExperienceDetail{})
 
 	r := gin.Default()
 
