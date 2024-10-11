@@ -22,6 +22,10 @@ type CreateUserDto struct {
 	Password string
 }
 
+type CheckIDResponse struct {
+	IsExists bool
+}
+
 type User struct {
 	ID             string `gorm:"primary_key"`
 	Email          string `gorm:"column:email"`
@@ -45,4 +49,16 @@ func CreateUser(dto *CreateUserDto) error {
 	}
 
 	return tx.Commit().Error
+}
+
+func CheckUserByID(id string) bool {
+	db := common.GetDB()
+	var user User
+	if err := db.Where(User{
+		ID: id,
+	}).First(&user).Error; err != nil {
+		return false
+	}
+
+	return true
 }

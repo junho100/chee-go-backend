@@ -10,6 +10,7 @@ import (
 
 func RegisterUsersRouters(router *gin.RouterGroup) {
 	router.POST("/", SignUp)
+	router.GET("/check-id", CheckID)
 }
 
 func SignUp(c *gin.Context) {
@@ -41,4 +42,13 @@ func SignUp(c *gin.Context) {
 		ID: dto.ID,
 	}
 	c.JSON(http.StatusCreated, response)
+}
+
+func CheckID(c *gin.Context) {
+	id := c.Query("id")
+
+	response := &CheckIDResponse{
+		IsExists: CheckUserByID(id),
+	}
+	c.JSON(http.StatusOK, response)
 }
