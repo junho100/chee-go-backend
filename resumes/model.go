@@ -1,6 +1,7 @@
 package resumes
 
 import (
+	"chee-go-backend/common"
 	"chee-go-backend/users"
 	"time"
 )
@@ -65,12 +66,13 @@ type Certificate struct {
 }
 
 type WorkExperience struct {
-	ID          uint   `gorm:"primary_key"`
-	CompanyName string `gorm:"column:company_name"`
-	Department  string `gorm:"column:department"`
-	Position    string `gorm:"column:position"`
-	Job         string `gorm:"column:job"`
-	ResumeID    uint
+	ID                    uint   `gorm:"primary_key"`
+	CompanyName           string `gorm:"column:company_name"`
+	Department            string `gorm:"column:department"`
+	Position              string `gorm:"column:position"`
+	Job                   string `gorm:"column:job"`
+	ResumeID              uint
+	WorkExperienceDetails []WorkExperienceDetail `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 type WorkExperienceDetail struct {
@@ -85,8 +87,8 @@ type WorkExperienceDetail struct {
 
 type RegisterResumeRequest struct {
 	Introduction    string
-	GithubURL       string
-	BlogURL         string
+	GithubURL       string `json:"github_url"`
+	BlogURL         string `json:"blog_url"`
 	Educations      []RegisterResumeRequestReducation
 	Projects        []RegisterResumeRequestProject
 	Activities      []RegisterResumeRequestActivity
@@ -95,18 +97,22 @@ type RegisterResumeRequest struct {
 	Keywords        []string
 }
 
+type RegisterResumeResponse struct {
+	ResumeID uint
+}
+
 type RegisterResumeRequestReducation struct {
-	SchoolName string
-	MajorName  string
-	StartDate  time.Time
-	EndDate    time.Time
+	SchoolName string    `json:"school_name"`
+	MajorName  string    `json:"major_name"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
 }
 
 type RegisterResumeRequestProject struct {
-	StartDate time.Time
-	EndDate   time.Time
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 	Content   string
-	GithubURL string
+	GithubURL string `json:"github_url"`
 }
 
 type RegisterResumeRequestActivity struct {
@@ -116,12 +122,12 @@ type RegisterResumeRequestActivity struct {
 
 type RegisterResumeRequestCertificate struct {
 	Name       string
-	IssuedBy   string
-	IssuedDate time.Time
+	IssuedBy   string    `json:"issued_by"`
+	IssuedDate time.Time `json:"issued_date"`
 }
 
 type RegisterResumeRequestWorkExperience struct {
-	CompanyName string
+	CompanyName string `json:"company_name"`
 	Department  string
 	Position    string
 	Job         string
@@ -130,7 +136,163 @@ type RegisterResumeRequestWorkExperience struct {
 
 type RegisterResumeRequestWorkExperienceDetail struct {
 	Name      string
-	StartDate time.Time
-	EndDate   time.Time
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 	Content   string
+}
+
+type CreateResumeDTO struct {
+	Introduction    string
+	GithubURL       string
+	BlogURL         string
+	Educations      []RegisterResumeRequestReducation
+	Projects        []RegisterResumeRequestProject
+	Activities      []RegisterResumeRequestActivity
+	Certificates    []RegisterResumeRequestCertificate
+	WorkExperiences []RegisterResumeRequestWorkExperience
+	Keywords        []string
+	UserID          string
+}
+
+func CreateResume(dto *CreateResumeDTO) (uint, error) {
+	var resume Resume
+	db := common.GetDB()
+	tx := db.Begin()
+
+	if err := db.Where(&Resume{
+		UserID: dto.UserID,
+	}).First(&resume).Error; err != nil {
+		resume = Resume{
+			Introduction: dto.Introduction,
+			GithubURL:    dto.GithubURL,
+			BlogURL:      dto.BlogURL,
+			UserID:       dto.UserID,
+		}
+	}
+
+	if err := tx.Save(&resume).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	if err := tx.Where(&Education{
+		ResumeID: resume.ID,
+	}).Delete(&Education{}).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	for _, education := range dto.Educations {
+		savedEducation := &Education{
+			SchoolName: education.SchoolName,
+			MajorName:  education.MajorName,
+			StartDate:  education.StartDate,
+			EndDate:    education.EndDate,
+			ResumeID:   resume.ID,
+		}
+
+		if err := tx.Save(&savedEducation).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	if err := tx.Where(&Project{
+		ResumeID: resume.ID,
+	}).Delete(&Project{}).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	for _, project := range dto.Projects {
+		savedProject := &Project{
+			StartDate: project.StartDate,
+			EndDate:   project.EndDate,
+			Content:   project.Content,
+			GithubURL: project.GithubURL,
+			ResumeID:  resume.ID,
+		}
+
+		if err := tx.Save(&savedProject).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	if err := tx.Where(&Activity{
+		ResumeID: resume.ID,
+	}).Delete(&Activity{}).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	for _, activity := range dto.Activities {
+		savedActivity := &Activity{
+			Name:    activity.Name,
+			Content: activity.Content,
+		}
+
+		if err := tx.Save(&savedActivity).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	if err := tx.Where(&Certificate{
+		ResumeID: resume.ID,
+	}).Delete(&Certificate{}).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	for _, certificate := range dto.Certificates {
+		savedCertificate := &Certificate{
+			Name:       certificate.Name,
+			IssuedBy:   certificate.IssuedBy,
+			IssuedDate: certificate.IssuedDate,
+		}
+
+		if err := tx.Save(&savedCertificate).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	if err := tx.Where(&WorkExperience{
+		ResumeID: resume.ID,
+	}).Delete(&WorkExperience{}).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	for _, workExperience := range dto.WorkExperiences {
+		savedWorkExperience := &WorkExperience{
+			CompanyName: workExperience.CompanyName,
+			Department:  workExperience.Department,
+			Position:    workExperience.Position,
+			Job:         workExperience.Job,
+		}
+
+		if err := tx.Save(&savedWorkExperience).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+
+		for _, detail := range workExperience.Details {
+			savedDetail := &WorkExperienceDetail{
+				Name:             detail.Name,
+				StartDate:        detail.StartDate,
+				EndDate:          detail.EndDate,
+				Content:          detail.Content,
+				WorkExperienceID: savedWorkExperience.ID,
+			}
+
+			if err := tx.Save(&savedDetail).Error; err != nil {
+				tx.Rollback()
+				return 0, err
+			}
+		}
+	}
+
+	return resume.ID, tx.Commit().Error
 }

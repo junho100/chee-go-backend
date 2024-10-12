@@ -2,7 +2,9 @@ package users
 
 import (
 	"chee-go-backend/common"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"os"
@@ -111,4 +113,32 @@ func CreateToken(id string) (string, error) {
 	}
 
 	return signedToken, nil
+}
+
+func ExtractToken(rawTokenHeaderValue string) (string, error) {
+	token := strings.Split(rawTokenHeaderValue, " ")[1]
+
+	if token == "" {
+		return "", errors.New("no token")
+	}
+
+	return token, nil
+}
+
+func GetUserIDFromToken(tokenValue string) (string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	token, err := jwt.Parse(tokenValue, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if userID, ok := claims["user_id"].(string); ok {
+			return userID, nil
+		}
+	}
+	return "", errors.New("failed to extract token")
 }
