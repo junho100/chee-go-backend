@@ -34,7 +34,7 @@ type CheckIDResponse struct {
 }
 
 type LoginResponse struct {
-	Token string
+	Token string `json:"token"`
 }
 
 type LoginRequest struct {
