@@ -48,6 +48,14 @@ type User struct {
 	HashedPassword string `gorm:"column:hashed_password;not null"`
 }
 
+type CheckMeRequest struct {
+	Token string `json:"token"`
+}
+
+type CheckMeResponse struct {
+	UserID string `json:"user_id"`
+}
+
 func CreateUser(dto *CreateUserDto) error {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	user := &User{

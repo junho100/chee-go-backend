@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"net/http"
 
 	"chee-go-backend/common"
@@ -12,6 +13,7 @@ func RegisterUsersRouters(router *gin.RouterGroup) {
 	router.POST("/", SignUp)
 	router.GET("/check-id", CheckID)
 	router.POST("/login", Login)
+	router.POST("/me", CheckMe)
 }
 
 func SignUp(c *gin.Context) {
@@ -94,6 +96,35 @@ func Login(c *gin.Context) {
 
 	response := &LoginResponse{
 		Token: token,
+	}
+	c.JSON(http.StatusCreated, response)
+}
+
+func CheckMe(c *gin.Context) {
+	var checkMeRequest CheckMeRequest
+
+	if err := c.BindJSON(&checkMeRequest); err != nil {
+		fmt.Println(c.Request.Body)
+		response := &common.CommonErrorResponse{
+			Message: "bad content.",
+		}
+		fmt.Println(err)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	var userID string
+	var err error
+	if userID, err = GetUserIDFromToken(checkMeRequest.Token); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "invalid token.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	response := &CheckMeResponse{
+		UserID: userID,
 	}
 	c.JSON(http.StatusCreated, response)
 }
