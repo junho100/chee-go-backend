@@ -132,6 +132,15 @@ func GetWantedResume(c *gin.Context) {
 	}
 
 	resume, err := GetResumeByUserID(userID)
+
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to get resume.",
+		}
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
 	keywords := GetKeywordsByResumeID(resume.ID)
 
 	wantedResume := ConvertResumeToWanted(*resume, keywords)
