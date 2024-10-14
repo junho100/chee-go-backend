@@ -1,7 +1,6 @@
 package users
 
 import (
-	"fmt"
 	"net/http"
 
 	"chee-go-backend/common"
@@ -104,11 +103,9 @@ func CheckMe(c *gin.Context) {
 	var checkMeRequest CheckMeRequest
 
 	if err := c.BindJSON(&checkMeRequest); err != nil {
-		fmt.Println(c.Request.Body)
 		response := &common.CommonErrorResponse{
 			Message: "bad content.",
 		}
-		fmt.Println(err)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}

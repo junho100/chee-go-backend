@@ -4,6 +4,8 @@ import (
 	"chee-go-backend/common"
 	"chee-go-backend/users"
 	"time"
+
+	"gorm.io/gorm/clause"
 )
 
 type Resume struct {
@@ -93,7 +95,7 @@ type RegisterResumeRequest struct {
 	Projects        []RegisterResumeRequestProject
 	Activities      []RegisterResumeRequestActivity
 	Certificates    []RegisterResumeRequestCertificate
-	WorkExperiences []RegisterResumeRequestWorkExperience
+	WorkExperiences []RegisterResumeRequestWorkExperience `json:"work_experiences"`
 	Keywords        []string
 }
 
@@ -131,7 +133,7 @@ type RegisterResumeRequestWorkExperience struct {
 	Department  string
 	Position    string
 	Job         string
-	Details     []RegisterResumeRequestWorkExperienceDetail
+	Details     []RegisterResumeRequestWorkExperienceDetail `json:"details"`
 }
 
 type RegisterResumeRequestWorkExperienceDetail struct {
@@ -152,6 +154,136 @@ type CreateResumeDTO struct {
 	WorkExperiences []RegisterResumeRequestWorkExperience
 	Keywords        []string
 	UserID          string
+}
+
+type GetResumeResponse struct {
+	ID              uint                              `json:"id"`
+	Introduction    string                            `json:"introduction"`
+	GithubURL       string                            `json:"github_url"`
+	BlogURL         string                            `json:"blog_url"`
+	Educations      []GetResumeResponseEducation      `json:"educations"`
+	Projects        []GetResumeResponseProject        `json:"projects"`
+	Activities      []GetResumeResponseActivity       `json:"activities"`
+	Certificates    []GetResumeResponseCertificate    `json:"certificates"`
+	WorkExperiences []GetResumeResponseWorkExperience `json:"work_experiences"`
+}
+
+type GetResumeResponseEducation struct {
+	ID         uint      `json:"id"`
+	SchoolName string    `json:"school_name"`
+	MajorName  string    `json:"major_name"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+}
+
+type GetResumeResponseProject struct {
+	ID        uint      `json:"id"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+	Content   string    `json:"content"`
+	GithubURL string    `json:"github_url"`
+}
+
+type GetResumeResponseActivity struct {
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
+type GetResumeResponseCertificate struct {
+	ID         uint      `json:"id"`
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	IssuedDate time.Time `json:"issued_date"`
+}
+
+type GetResumeResponseWorkExperience struct {
+	ID                    uint                                    `json:"id"`
+	CompanyName           string                                  `json:"company_name"`
+	Department            string                                  `json:"department"`
+	Position              string                                  `json:"position"`
+	Job                   string                                  `json:"job"`
+	WorkExperienceDetails []GetResumeResponseWorkExperienceDetail `json:"work_experience_details"`
+}
+
+type GetResumeResponseWorkExperienceDetail struct {
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+	Content   string    `json:"content"`
+}
+
+func (r *GetResumeResponse) from(resume Resume) *GetResumeResponse {
+	r.ID = resume.ID
+	r.Introduction = resume.Introduction
+	r.GithubURL = resume.GithubURL
+	r.BlogURL = resume.BlogURL
+
+	r.Educations = make([]GetResumeResponseEducation, len(resume.Educations))
+	for i, education := range resume.Educations {
+		r.Educations[i] = GetResumeResponseEducation{
+			ID:         education.ID,
+			SchoolName: education.SchoolName,
+			MajorName:  education.MajorName,
+			StartDate:  education.StartDate,
+			EndDate:    education.EndDate,
+		}
+	}
+
+	r.Projects = make([]GetResumeResponseProject, len(resume.Projects))
+	for i, project := range resume.Projects {
+		r.Projects[i] = GetResumeResponseProject{
+			ID:        project.ID,
+			StartDate: project.StartDate,
+			EndDate:   project.EndDate,
+			Content:   project.Content,
+			GithubURL: project.GithubURL,
+		}
+	}
+
+	r.Activities = make([]GetResumeResponseActivity, len(resume.Activities))
+	for i, activity := range resume.Activities {
+		r.Activities[i] = GetResumeResponseActivity{
+			ID:      activity.ID,
+			Name:    activity.Name,
+			Content: activity.Content,
+		}
+	}
+
+	r.Certificates = make([]GetResumeResponseCertificate, len(resume.Certificates))
+	for i, certificate := range resume.Certificates {
+		r.Certificates[i] = GetResumeResponseCertificate{
+			ID:         certificate.ID,
+			Name:       certificate.Name,
+			IssuedBy:   certificate.IssuedBy,
+			IssuedDate: certificate.IssuedDate,
+		}
+	}
+
+	r.WorkExperiences = make([]GetResumeResponseWorkExperience, len(resume.WorkExperiences))
+	for i, workExperience := range resume.WorkExperiences {
+		r.WorkExperiences[i] = GetResumeResponseWorkExperience{
+			ID:          workExperience.ID,
+			CompanyName: workExperience.CompanyName,
+			Department:  workExperience.Department,
+			Position:    workExperience.Position,
+			Job:         workExperience.Job,
+		}
+
+		r.WorkExperiences[i].WorkExperienceDetails = make([]GetResumeResponseWorkExperienceDetail, len(workExperience.WorkExperienceDetails))
+		for j, workExperienceDetail := range workExperience.WorkExperienceDetails {
+			r.WorkExperiences[i].WorkExperienceDetails[j] = GetResumeResponseWorkExperienceDetail{
+				ID:        workExperienceDetail.ID,
+				Name:      workExperienceDetail.Name,
+				StartDate: workExperienceDetail.StartDate,
+				EndDate:   workExperienceDetail.EndDate,
+				Content:   workExperienceDetail.Content,
+			}
+		}
+	}
+
+	return r
 }
 
 func CreateResume(dto *CreateResumeDTO) (uint, error) {
@@ -228,8 +360,9 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 
 	for _, activity := range dto.Activities {
 		savedActivity := &Activity{
-			Name:    activity.Name,
-			Content: activity.Content,
+			Name:     activity.Name,
+			Content:  activity.Content,
+			ResumeID: resume.ID,
 		}
 
 		if err := tx.Save(&savedActivity).Error; err != nil {
@@ -250,6 +383,7 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			Name:       certificate.Name,
 			IssuedBy:   certificate.IssuedBy,
 			IssuedDate: certificate.IssuedDate,
+			ResumeID:   resume.ID,
 		}
 
 		if err := tx.Save(&savedCertificate).Error; err != nil {
@@ -271,6 +405,7 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			Department:  workExperience.Department,
 			Position:    workExperience.Position,
 			Job:         workExperience.Job,
+			ResumeID:    resume.ID,
 		}
 
 		if err := tx.Save(&savedWorkExperience).Error; err != nil {
@@ -295,4 +430,18 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 	}
 
 	return resume.ID, tx.Commit().Error
+}
+
+func GetResumeByUserID(userID string) (*Resume, error) {
+	var resume Resume
+	db := common.GetDB()
+
+	if err := db.Preload("WorkExperiences.WorkExperienceDetails").
+		Preload(clause.Associations).Where(Resume{
+		UserID: userID,
+	}).First(&resume).Error; err != nil {
+		return nil, err
+	}
+
+	return &resume, nil
 }

@@ -10,6 +10,7 @@ import (
 
 func RegisterResumesRouters(router *gin.RouterGroup) {
 	router.POST("/", RegisterResume)
+	router.GET("/", GetResume)
 }
 
 func RegisterResume(c *gin.Context) {
@@ -68,4 +69,40 @@ func RegisterResume(c *gin.Context) {
 		ResumeID: resumeID,
 	}
 	c.JSON(http.StatusCreated, response)
+}
+
+func GetResume(c *gin.Context) {
+	var token string
+	var err error
+	var userID string
+
+	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	if userID, err = users.GetUserIDFromToken(token); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	resume, err := GetResumeByUserID(userID)
+
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to get resume.",
+		}
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	var response GetResumeResponse
+	response.from(*resume)
+	c.JSON(http.StatusOK, response)
 }
