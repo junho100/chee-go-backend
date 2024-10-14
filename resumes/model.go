@@ -53,10 +53,12 @@ type KeywordResume struct {
 }
 
 type Activity struct {
-	ID       uint   `gorm:"primary_key"`
-	Name     string `gorm:"column:name"`
-	Content  string `gorm:"column:content"`
-	ResumeID uint
+	ID        uint      `gorm:"primary_key"`
+	Name      string    `gorm:"column:name"`
+	Content   string    `gorm:"column:content"`
+	StartDate time.Time `gorm:"column:start_date;type:date"`
+	EndDate   time.Time `gorm:"column:end_date;type:date"`
+	ResumeID  uint
 }
 
 type Certificate struct {
@@ -118,8 +120,10 @@ type RegisterResumeRequestProject struct {
 }
 
 type RegisterResumeRequestActivity struct {
-	Name    string
-	Content string
+	Name      string
+	Content   string
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 }
 
 type RegisterResumeRequestCertificate struct {
@@ -185,9 +189,11 @@ type GetResumeResponseProject struct {
 }
 
 type GetResumeResponseActivity struct {
-	ID      uint   `json:"id"`
-	Name    string `json:"name"`
-	Content string `json:"content"`
+	ID        uint      `json:"id"`
+	Name      string    `json:"name"`
+	Content   string    `json:"content"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
 }
 
 type GetResumeResponseCertificate struct {
@@ -365,9 +371,11 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 
 	for _, activity := range dto.Activities {
 		savedActivity := &Activity{
-			Name:     activity.Name,
-			Content:  activity.Content,
-			ResumeID: resume.ID,
+			Name:      activity.Name,
+			Content:   activity.Content,
+			ResumeID:  resume.ID,
+			StartDate: activity.StartDate,
+			EndDate:   activity.EndDate,
 		}
 
 		if err := tx.Save(&savedActivity).Error; err != nil {
