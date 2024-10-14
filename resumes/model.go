@@ -672,18 +672,13 @@ func (r *GetWantedResumeResponse) from(wantedResume WantedResume) *GetWantedResu
 
 	r.Educations = make([]GetWantedResumeResponseEducation, len(wantedResume.Educations))
 	for i, education := range wantedResume.Educations {
-		r.Educations[i] = GetWantedResumeResponseEducation{
-			SchoolName: education.SchoolName,
-			MajorName:  education.MajorName,
-			StartDate:  education.StartDate,
-			EndDate:    education.EndDate,
-		}
+		r.Educations[i] = GetWantedResumeResponseEducation(education)
 	}
 
 	r.WorkExperiences = make([]GetWantedResumeResponseWorkExperience, len(wantedResume.WorkExperiences))
 	for i, workExperience := range wantedResume.WorkExperiences {
 		r.WorkExperiences[i].CompanyName = workExperience.CompanyName
-		r.WorkExperiences[i].Position = workExperience.CompanyName
+		r.WorkExperiences[i].Position = workExperience.Position
 		r.WorkExperiences[i].StartDate = workExperience.StartDate
 		r.WorkExperiences[i].EndDate = workExperience.EndDate
 
