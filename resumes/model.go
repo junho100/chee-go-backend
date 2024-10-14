@@ -99,7 +99,7 @@ type RegisterResumeRequest struct {
 	Activities      []RegisterResumeRequestActivity
 	Certificates    []RegisterResumeRequestCertificate
 	WorkExperiences []RegisterResumeRequestWorkExperience `json:"work_experiences"`
-	Keywords        []string
+	Keywords        []string                              `json:"keywords"`
 }
 
 type RegisterResumeResponse struct {
@@ -173,6 +173,7 @@ type GetResumeResponse struct {
 	Activities      []GetResumeResponseActivity       `json:"activities"`
 	Certificates    []GetResumeResponseCertificate    `json:"certificates"`
 	WorkExperiences []GetResumeResponseWorkExperience `json:"work_experiences"`
+	Keywords        []string                          `json:"keywords"`
 }
 
 type GetResumeResponseEducation struct {
@@ -224,11 +225,12 @@ type GetResumeResponseWorkExperienceDetail struct {
 	Content   string    `json:"content"`
 }
 
-func (r *GetResumeResponse) from(resume Resume) *GetResumeResponse {
+func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeResponse {
 	r.ID = resume.ID
 	r.Introduction = resume.Introduction
 	r.GithubURL = resume.GithubURL
 	r.BlogURL = resume.BlogURL
+	r.Keywords = keywords
 
 	r.Educations = make([]GetResumeResponseEducation, len(resume.Educations))
 	for i, education := range resume.Educations {
@@ -450,6 +452,39 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 		}
 	}
 
+	if err := tx.Where(&KeywordResume{
+		ResumeID: resume.ID,
+	}).Delete(&KeywordResume{}).Error; err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	for _, keywordName := range dto.Keywords {
+		var savedKeyword Keyword
+		if err := db.Where(&Keyword{
+			Name: keywordName,
+		}).First(&savedKeyword).Error; err != nil {
+			savedKeyword = Keyword{
+				Name: keywordName,
+			}
+
+			if err := tx.Save(&savedKeyword).Error; err != nil {
+				tx.Rollback()
+				return 0, err
+			}
+		}
+
+		savedKeywordResume := &KeywordResume{
+			ResumeID:  resume.ID,
+			KeywordID: savedKeyword.ID,
+		}
+
+		if err := tx.Save(&savedKeywordResume).Error; err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
 	return resume.ID, tx.Commit().Error
 }
 
@@ -465,4 +500,23 @@ func GetResumeByUserID(userID string) (*Resume, error) {
 	}
 
 	return &resume, nil
+}
+
+func GetKeywordsByResumeID(id uint) []string {
+	var keywordResumes []KeywordResume
+	db := common.GetDB()
+
+	if err := db.Preload("Keyword").Where(&KeywordResume{
+		ResumeID: id,
+	}).Find(&keywordResumes).Error; err != nil {
+		return make([]string, 0)
+	}
+
+	result := make([]string, len(keywordResumes))
+
+	for i, keywordResume := range keywordResumes {
+		result[i] = keywordResume.Keyword.Name
+	}
+
+	return result
 }

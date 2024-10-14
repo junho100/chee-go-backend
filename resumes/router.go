@@ -102,7 +102,9 @@ func GetResume(c *gin.Context) {
 		return
 	}
 
+	keywords := GetKeywordsByResumeID(resume.ID)
+
 	var response GetResumeResponse
-	response.from(*resume)
+	response.from(*resume, keywords)
 	c.JSON(http.StatusOK, response)
 }
