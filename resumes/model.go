@@ -37,6 +37,7 @@ type Project struct {
 	EndDate   time.Time `gorm:"column:end_date;type:date"`
 	Content   string    `gorm:"column:content"`
 	GithubURL string    `gorm:"column:github_url"`
+	Name      string    `gorm:"column:name"`
 	ResumeID  uint
 }
 
@@ -110,6 +111,7 @@ type RegisterResumeRequestReducation struct {
 	MajorName  string    `json:"major_name"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`
+	Name       string    `json:"name"`
 }
 
 type RegisterResumeRequestProject struct {
@@ -117,6 +119,7 @@ type RegisterResumeRequestProject struct {
 	EndDate   time.Time `json:"end_date"`
 	Content   string
 	GithubURL string `json:"github_url"`
+	Name      string `json:"name"`
 }
 
 type RegisterResumeRequestActivity struct {
@@ -186,6 +189,7 @@ type GetResumeResponseProject struct {
 	EndDate   time.Time `json:"end_date"`
 	Content   string    `json:"content"`
 	GithubURL string    `json:"github_url"`
+	Name      string    `json:"name"`
 }
 
 type GetResumeResponseActivity struct {
@@ -245,15 +249,18 @@ func (r *GetResumeResponse) from(resume Resume) *GetResumeResponse {
 			EndDate:   project.EndDate,
 			Content:   project.Content,
 			GithubURL: project.GithubURL,
+			Name:      project.Name,
 		}
 	}
 
 	r.Activities = make([]GetResumeResponseActivity, len(resume.Activities))
 	for i, activity := range resume.Activities {
 		r.Activities[i] = GetResumeResponseActivity{
-			ID:      activity.ID,
-			Name:    activity.Name,
-			Content: activity.Content,
+			ID:        activity.ID,
+			Name:      activity.Name,
+			Content:   activity.Content,
+			StartDate: activity.StartDate,
+			EndDate:   activity.EndDate,
 		}
 	}
 
@@ -354,6 +361,7 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			Content:   project.Content,
 			GithubURL: project.GithubURL,
 			ResumeID:  resume.ID,
+			Name:      project.Name,
 		}
 
 		if err := tx.Save(&savedProject).Error; err != nil {
