@@ -300,6 +300,11 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			BlogURL:      dto.BlogURL,
 			UserID:       dto.UserID,
 		}
+	} else {
+		resume.Introduction = dto.Introduction
+		resume.GithubURL = dto.GithubURL
+		resume.BlogURL = dto.BlogURL
+		resume.UserID = dto.UserID
 	}
 
 	if err := tx.Save(&resume).Error; err != nil {
