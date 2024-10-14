@@ -78,6 +78,8 @@ type WorkExperience struct {
 	Job                   string `gorm:"column:job"`
 	ResumeID              uint
 	WorkExperienceDetails []WorkExperienceDetail `gorm:"constraint:OnDelete:CASCADE;"`
+	StartDate             time.Time              `gorm:"column:start_date;type:date"`
+	EndDate               time.Time              `gorm:"column:end_date;type:date"`
 }
 
 type WorkExperienceDetail struct {
@@ -94,7 +96,7 @@ type RegisterResumeRequest struct {
 	Introduction    string
 	GithubURL       string `json:"github_url"`
 	BlogURL         string `json:"blog_url"`
-	Educations      []RegisterResumeRequestReducation
+	Educations      []RegisterResumeRequestEducation
 	Projects        []RegisterResumeRequestProject
 	Activities      []RegisterResumeRequestActivity
 	Certificates    []RegisterResumeRequestCertificate
@@ -106,12 +108,11 @@ type RegisterResumeResponse struct {
 	ResumeID uint
 }
 
-type RegisterResumeRequestReducation struct {
+type RegisterResumeRequestEducation struct {
 	SchoolName string    `json:"school_name"`
 	MajorName  string    `json:"major_name"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`
-	Name       string    `json:"name"`
 }
 
 type RegisterResumeRequestProject struct {
@@ -141,6 +142,8 @@ type RegisterResumeRequestWorkExperience struct {
 	Position    string
 	Job         string
 	Details     []RegisterResumeRequestWorkExperienceDetail `json:"details"`
+	StartDate   time.Time                                   `json:"start_date"`
+	EndDate     time.Time                                   `json:"end_date"`
 }
 
 type RegisterResumeRequestWorkExperienceDetail struct {
@@ -154,7 +157,7 @@ type CreateResumeDTO struct {
 	Introduction    string
 	GithubURL       string
 	BlogURL         string
-	Educations      []RegisterResumeRequestReducation
+	Educations      []RegisterResumeRequestEducation
 	Projects        []RegisterResumeRequestProject
 	Activities      []RegisterResumeRequestActivity
 	Certificates    []RegisterResumeRequestCertificate
@@ -215,6 +218,8 @@ type GetResumeResponseWorkExperience struct {
 	Position              string                                  `json:"position"`
 	Job                   string                                  `json:"job"`
 	WorkExperienceDetails []GetResumeResponseWorkExperienceDetail `json:"work_experience_details"`
+	StartDate             time.Time                               `json:"start_date"`
+	EndDate               time.Time                               `json:"end_date"`
 }
 
 type GetResumeResponseWorkExperienceDetail struct {
@@ -223,6 +228,80 @@ type GetResumeResponseWorkExperienceDetail struct {
 	StartDate time.Time `json:"start_date"`
 	EndDate   time.Time `json:"end_date"`
 	Content   string    `json:"content"`
+}
+
+type WantedResume struct {
+	Introduction    string
+	WorkExperiences []WantedResumeWorkExperience
+	Educations      []WantedResumeEducation
+	Skills          []string
+	// 수상 및 기타 항목에 프로젝트, 자격증, 활동 기입
+	Certificates []WantedResumeCertificate
+}
+
+type WantedResumeWorkExperience struct {
+	CompanyName string
+	Position    string
+	StartDate   time.Time
+	EndDate     time.Time
+	Details     []WantedResumeWorkExperienceDetail
+}
+
+type WantedResumeWorkExperienceDetail struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
+
+type WantedResumeEducation struct {
+	SchoolName string
+	MajorName  string
+	StartDate  time.Time
+	EndDate    time.Time
+}
+
+type WantedResumeCertificate struct {
+	Name      string
+	Content   string
+	StartDate time.Time
+}
+
+type GetWantedResumeResponse struct {
+	Introduction    string
+	WorkExperiences []GetWantedResumeResponseWorkExperience
+	Educations      []GetWantedResumeResponseEducation
+	Skills          []string
+	// 수상 및 기타 항목에 프로젝트, 자격증, 활동 기입
+	Certificates []GetWantedResumeResponseCertificate
+}
+
+type GetWantedResumeResponseWorkExperience struct {
+	CompanyName string
+	Position    string
+	StartDate   time.Time
+	EndDate     time.Time
+	Details     []GetWantedResumeResponseWorkExperienceDetail
+}
+
+type GetWantedResumeResponseWorkExperienceDetail struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
+
+type GetWantedResumeResponseEducation struct {
+	SchoolName string
+	MajorName  string
+	StartDate  time.Time
+	EndDate    time.Time
+}
+
+type GetWantedResumeResponseCertificate struct {
+	Name      string
+	Content   string
+	StartDate time.Time
 }
 
 func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeResponse {
@@ -284,6 +363,8 @@ func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeRes
 			Department:  workExperience.Department,
 			Position:    workExperience.Position,
 			Job:         workExperience.Job,
+			StartDate:   workExperience.StartDate,
+			EndDate:     workExperience.EndDate,
 		}
 
 		r.WorkExperiences[i].WorkExperienceDetails = make([]GetResumeResponseWorkExperienceDetail, len(workExperience.WorkExperienceDetails))
@@ -429,6 +510,8 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			Position:    workExperience.Position,
 			Job:         workExperience.Job,
 			ResumeID:    resume.ID,
+			StartDate:   workExperience.StartDate,
+			EndDate:     workExperience.EndDate,
 		}
 
 		if err := tx.Save(&savedWorkExperience).Error; err != nil {
@@ -519,4 +602,106 @@ func GetKeywordsByResumeID(id uint) []string {
 	}
 
 	return result
+}
+
+func ConvertResumeToWanted(resume Resume, keywords []string) WantedResume {
+	wantedResume := &WantedResume{
+		Introduction:    resume.Introduction,
+		WorkExperiences: make([]WantedResumeWorkExperience, len(resume.WorkExperiences)),
+		Educations:      make([]WantedResumeEducation, len(resume.Educations)),
+		Certificates:    make([]WantedResumeCertificate, len(resume.Certificates)+len(resume.Projects)+len(resume.Activities)),
+		Skills:          keywords,
+	}
+
+	for i, workExperience := range resume.WorkExperiences {
+		wantedResume.WorkExperiences[i] = WantedResumeWorkExperience{
+			CompanyName: workExperience.CompanyName,
+			Position:    workExperience.Position,
+			StartDate:   workExperience.StartDate,
+			EndDate:     workExperience.EndDate,
+		}
+
+		wantedResume.WorkExperiences[i].Details = make([]WantedResumeWorkExperienceDetail, len(resume.WorkExperiences[i].WorkExperienceDetails))
+		for j, detail := range resume.WorkExperiences[i].WorkExperienceDetails {
+			wantedResume.WorkExperiences[i].Details[j] = WantedResumeWorkExperienceDetail{
+				Name:      detail.Name,
+				StartDate: detail.StartDate,
+				EndDate:   detail.EndDate,
+				Content:   detail.Content,
+			}
+		}
+	}
+
+	for i, education := range resume.Educations {
+		wantedResume.Educations[i] = WantedResumeEducation{
+			SchoolName: education.SchoolName,
+			MajorName:  education.MajorName,
+			StartDate:  education.StartDate,
+			EndDate:    education.EndDate,
+		}
+	}
+
+	wantedResume.Certificates = make([]WantedResumeCertificate, len(resume.Certificates)+len(resume.Projects)+len(resume.Activities))
+	idx := 0
+	for _, certificate := range resume.Certificates {
+		wantedResume.Certificates[idx].Name = certificate.Name
+		wantedResume.Certificates[idx].StartDate = certificate.IssuedDate
+		wantedResume.Certificates[idx].Content = certificate.IssuedBy
+		idx++
+	}
+
+	for _, project := range resume.Projects {
+		wantedResume.Certificates[idx].Name = project.Name
+		wantedResume.Certificates[idx].StartDate = project.StartDate
+		wantedResume.Certificates[idx].Content = project.Content
+		idx++
+	}
+
+	for _, activity := range resume.Activities {
+		wantedResume.Certificates[idx].Name = activity.Name
+		wantedResume.Certificates[idx].StartDate = activity.StartDate
+		wantedResume.Certificates[idx].Content = activity.Content
+	}
+
+	return *wantedResume
+}
+
+func (r *GetWantedResumeResponse) from(wantedResume WantedResume) *GetWantedResumeResponse {
+	r.Introduction = wantedResume.Introduction
+	r.Skills = wantedResume.Skills
+
+	r.Educations = make([]GetWantedResumeResponseEducation, len(wantedResume.Educations))
+	for i, education := range wantedResume.Educations {
+		r.Educations[i] = GetWantedResumeResponseEducation{
+			SchoolName: education.SchoolName,
+			MajorName:  education.MajorName,
+			StartDate:  education.StartDate,
+			EndDate:    education.EndDate,
+		}
+	}
+
+	r.WorkExperiences = make([]GetWantedResumeResponseWorkExperience, len(wantedResume.WorkExperiences))
+	for i, workExperience := range wantedResume.WorkExperiences {
+		r.WorkExperiences[i].CompanyName = workExperience.CompanyName
+		r.WorkExperiences[i].Position = workExperience.CompanyName
+		r.WorkExperiences[i].StartDate = workExperience.StartDate
+		r.WorkExperiences[i].EndDate = workExperience.EndDate
+
+		r.WorkExperiences[i].Details = make([]GetWantedResumeResponseWorkExperienceDetail, len(workExperience.Details))
+		for j, detail := range workExperience.Details {
+			r.WorkExperiences[i].Details[j].Name = detail.Name
+			r.WorkExperiences[i].Details[j].StartDate = detail.StartDate
+			r.WorkExperiences[i].Details[j].EndDate = detail.EndDate
+			r.WorkExperiences[i].Details[j].Content = detail.Content
+		}
+	}
+
+	r.Certificates = make([]GetWantedResumeResponseCertificate, len(wantedResume.Certificates))
+	for i, certificates := range wantedResume.Certificates {
+		r.Certificates[i].Name = certificates.Name
+		r.Certificates[i].Content = certificates.Content
+		r.Certificates[i].StartDate = certificates.StartDate
+	}
+
+	return r
 }

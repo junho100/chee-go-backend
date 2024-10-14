@@ -11,6 +11,7 @@ import (
 func RegisterResumesRouters(router *gin.RouterGroup) {
 	router.POST("", RegisterResume)
 	router.GET("", GetResume)
+	router.GET("/wanted", GetWantedResume)
 }
 
 func RegisterResume(c *gin.Context) {
@@ -106,5 +107,36 @@ func GetResume(c *gin.Context) {
 
 	var response GetResumeResponse
 	response.from(*resume, keywords)
+	c.JSON(http.StatusOK, response)
+}
+
+func GetWantedResume(c *gin.Context) {
+	var token string
+	var err error
+	var userID string
+
+	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	if userID, err = users.GetUserIDFromToken(token); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	resume, err := GetResumeByUserID(userID)
+	keywords := GetKeywordsByResumeID(resume.ID)
+
+	wantedResume := ConvertResumeToWanted(*resume, keywords)
+
+	var response GetWantedResumeResponse
+	response.from(wantedResume)
 	c.JSON(http.StatusOK, response)
 }
