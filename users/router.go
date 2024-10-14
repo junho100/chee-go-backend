@@ -9,7 +9,7 @@ import (
 )
 
 func RegisterUsersRouters(router *gin.RouterGroup) {
-	router.POST("/", SignUp)
+	router.POST("", SignUp)
 	router.GET("/check-id", CheckID)
 	router.POST("/login", Login)
 	router.POST("/me", CheckMe)

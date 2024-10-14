@@ -9,8 +9,8 @@ import (
 )
 
 func RegisterResumesRouters(router *gin.RouterGroup) {
-	router.POST("/", RegisterResume)
-	router.GET("/", GetResume)
+	router.POST("", RegisterResume)
+	router.GET("", GetResume)
 }
 
 func RegisterResume(c *gin.Context) {
