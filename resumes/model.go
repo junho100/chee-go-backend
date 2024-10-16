@@ -308,53 +308,53 @@ type GetWantedResumeResponseCertificate struct {
 }
 
 type GetProgrammersResumeResponse struct {
-	WorkExperiences []GetProgrammersResumeResponseWorkExperience
-	Educations      []GetProgrammersResumeResponseEducation
-	Projects        []GetProgrammersResumeResponseProject
-	Certificates    []GetProgrammersResumeResponseCertificates
-	Activities      []GetProgrammersResumeResponseActivity
+	WorkExperiences []GetProgrammersResumeResponseWorkExperience `json:"work_experiences"`
+	Educations      []GetProgrammersResumeResponseEducation      `json:"educations"`
+	Projects        []GetProgrammersResumeResponseProject        `json:"projects"`
+	Certificates    []GetProgrammersResumeResponseCertificates   `json:"certificates"`
+	Activities      []GetProgrammersResumeResponseActivity       `json:"activities"`
 }
 
 type GetProgrammersResumeResponseWorkExperience struct {
-	CompanyName string
-	Position    string
-	StartDate   time.Time
-	Details     []GetProgrammersResumeResponseWorkExperienceDetail
+	CompanyName string                                             `json:"company_name"`
+	Position    string                                             `json:"position"`
+	StartDate   time.Time                                          `json:"start_date"`
+	Details     []GetProgrammersResumeResponseWorkExperienceDetail `json:"details"`
 }
 
 type GetProgrammersResumeResponseWorkExperienceDetail struct {
-	Name      string
-	StartDate time.Time
-	EndDate   time.Time
-	Content   string
+	Name      string    `json:"name"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+	Content   string    `json:"content"`
 }
 
 type GetProgrammersResumeResponseEducation struct {
-	SchoolName string
-	MajorName  string
-	StartDate  time.Time
-	EndDate    time.Time
+	SchoolName string    `json:"school_name"`
+	MajorName  string    `json:"major_name"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
 }
 
 type GetProgrammersResumeResponseProject struct {
-	Name      string
-	StartDate time.Time
-	Summary   string
-	Cotent    string
-	GithubURL string
+	Name      string    `json:"name"`
+	StartDate time.Time `json:"start_date"`
+	Summary   string    `json:"summary"`
+	Content   string    `json:"content"`
+	GithubURL string    `json:"github_url"`
 }
 
 type GetProgrammersResumeResponseCertificates struct {
-	Name       string
-	IssuedBy   string
-	IssuedDate time.Time
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	IssuedDate time.Time `json:"issued_date"`
 }
 
 type GetProgrammersResumeResponseActivity struct {
-	Name      string
-	StartDate time.Time
-	EndDate   time.Time
-	Content   string
+	Name      string    `json:"name"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+	Content   string    `json:"content"`
 }
 
 type ProgrammersResume struct {
@@ -390,7 +390,7 @@ type ProgrammersResumeProject struct {
 	Name      string
 	StartDate time.Time
 	Summary   string
-	Cotent    string
+	Content   string
 	GithubURL string
 }
 
@@ -801,6 +801,111 @@ func (r *GetWantedResumeResponse) from(wantedResume WantedResume) *GetWantedResu
 		r.Certificates[i].Name = certificates.Name
 		r.Certificates[i].Content = certificates.Content
 		r.Certificates[i].StartDate = certificates.StartDate
+	}
+
+	return r
+}
+
+func ConvertResumeToProgrammers(resume Resume) ProgrammersResume {
+	programmersResume := &ProgrammersResume{
+		WorkExperiences: make([]ProgrammersResumeWorkExperience, len(resume.WorkExperiences)),
+		Educations:      make([]ProgrammersResumeEducation, len(resume.Educations)),
+		Projects:        make([]ProgrammersResumeProject, len(resume.Projects)),
+		Certificates:    make([]ProgrammersResumeCertificates, len(resume.Certificates)),
+		Activities:      make([]ProgrammersResumeActivity, len(resume.Activities)),
+	}
+
+	for i, workExperience := range resume.WorkExperiences {
+		programmersResume.WorkExperiences[i].CompanyName = workExperience.CompanyName
+		programmersResume.WorkExperiences[i].Position = workExperience.Position
+		programmersResume.WorkExperiences[i].StartDate = workExperience.StartDate
+
+		programmersResume.WorkExperiences[i].Details = make([]ProgrammersResumeWorkExperienceDetail, len(workExperience.WorkExperienceDetails))
+		for j, detail := range resume.WorkExperiences[i].WorkExperienceDetails {
+			programmersResume.WorkExperiences[i].Details[j].Name = detail.Name
+			programmersResume.WorkExperiences[i].Details[j].StartDate = detail.StartDate
+			programmersResume.WorkExperiences[i].Details[j].EndDate = detail.EndDate
+			programmersResume.WorkExperiences[i].Details[j].Content = detail.Content
+		}
+	}
+
+	for i, education := range resume.Educations {
+		programmersResume.Educations[i].SchoolName = education.SchoolName
+		programmersResume.Educations[i].MajorName = education.MajorName
+		programmersResume.Educations[i].StartDate = education.StartDate
+		programmersResume.Educations[i].EndDate = education.EndDate
+	}
+
+	for i, project := range resume.Projects {
+		programmersResume.Projects[i].Name = project.Name
+		programmersResume.Projects[i].StartDate = project.StartDate
+		programmersResume.Projects[i].Summary = project.Summary
+		programmersResume.Projects[i].Content = project.Content
+		programmersResume.Projects[i].GithubURL = project.GithubURL
+	}
+
+	for i, certificate := range resume.Certificates {
+		programmersResume.Certificates[i].Name = certificate.Name
+		programmersResume.Certificates[i].IssuedBy = certificate.IssuedBy
+		programmersResume.Certificates[i].IssuedDate = certificate.IssuedDate
+	}
+
+	for i, activity := range resume.Activities {
+		programmersResume.Activities[i].Name = activity.Name
+		programmersResume.Activities[i].StartDate = activity.StartDate
+		programmersResume.Activities[i].EndDate = activity.EndDate
+		programmersResume.Activities[i].Content = activity.Content
+	}
+
+	return *programmersResume
+}
+
+func (r *GetProgrammersResumeResponse) from(resume ProgrammersResume) *GetProgrammersResumeResponse {
+	r.WorkExperiences = make([]GetProgrammersResumeResponseWorkExperience, len(resume.WorkExperiences))
+	for i, workExperience := range resume.WorkExperiences {
+		r.WorkExperiences[i].CompanyName = workExperience.CompanyName
+		r.WorkExperiences[i].Position = workExperience.Position
+		r.WorkExperiences[i].StartDate = workExperience.StartDate
+
+		r.WorkExperiences[i].Details = make([]GetProgrammersResumeResponseWorkExperienceDetail, len(workExperience.Details))
+		for j, detail := range workExperience.Details {
+			r.WorkExperiences[i].Details[j].Name = detail.Name
+			r.WorkExperiences[i].Details[j].StartDate = detail.StartDate
+			r.WorkExperiences[i].Details[j].EndDate = detail.EndDate
+			r.WorkExperiences[i].Details[j].Content = detail.Content
+		}
+	}
+
+	r.Educations = make([]GetProgrammersResumeResponseEducation, len(resume.Educations))
+	for i, education := range resume.Educations {
+		r.Educations[i].SchoolName = education.SchoolName
+		r.Educations[i].MajorName = education.MajorName
+		r.Educations[i].StartDate = education.StartDate
+		r.Educations[i].EndDate = education.EndDate
+	}
+
+	r.Projects = make([]GetProgrammersResumeResponseProject, len(resume.Projects))
+	for i, project := range resume.Projects {
+		r.Projects[i].Name = project.Name
+		r.Projects[i].StartDate = project.StartDate
+		r.Projects[i].Summary = project.Summary
+		r.Projects[i].Content = project.Content
+		r.Projects[i].GithubURL = project.GithubURL
+	}
+
+	r.Certificates = make([]GetProgrammersResumeResponseCertificates, len(resume.Certificates))
+	for i, certificate := range resume.Certificates {
+		r.Certificates[i].Name = certificate.Name
+		r.Certificates[i].IssuedBy = certificate.IssuedBy
+		r.Certificates[i].IssuedDate = certificate.IssuedDate
+	}
+
+	r.Activities = make([]GetProgrammersResumeResponseActivity, len(resume.Activities))
+	for i, activity := range resume.Activities {
+		r.Activities[i].Name = activity.Name
+		r.Activities[i].StartDate = activity.StartDate
+		r.Activities[i].EndDate = activity.EndDate
+		r.Activities[i].Content = activity.Content
 	}
 
 	return r
