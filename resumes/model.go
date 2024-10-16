@@ -304,6 +304,106 @@ type GetWantedResumeResponseCertificate struct {
 	StartDate time.Time
 }
 
+type GetProgrammersResumeResponse struct {
+	WorkExperiences []GetProgrammersResumeResponseWorkExperience
+	Educations      []GetProgrammersResumeResponseEducation
+	Projects        []GetProgrammersResumeResponseProject
+	Certificates    []GetProgrammersResumeResponseCertificates
+	Activities      []GetProgrammersResumeResponseActivity
+}
+
+type GetProgrammersResumeResponseWorkExperience struct {
+	CompanyName string
+	Position    string
+	StartDate   time.Time
+	Details     []GetProgrammersResumeResponseWorkExperienceDetail
+}
+
+type GetProgrammersResumeResponseWorkExperienceDetail struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
+
+type GetProgrammersResumeResponseEducation struct {
+	SchoolName string
+	MajorName  string
+	StartDate  time.Time
+	EndDate    time.Time
+}
+
+type GetProgrammersResumeResponseProject struct {
+	Name      string
+	StartDate time.Time
+	Summary   string
+	Cotent    string
+	GithubURL string
+}
+
+type GetProgrammersResumeResponseCertificates struct {
+	Name       string
+	IssuedBy   string
+	IssuedDate time.Time
+}
+
+type GetProgrammersResumeResponseActivity struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
+
+type ProgrammersResume struct {
+	WorkExperiences []ProgrammersResumeWorkExperience
+	Educations      []ProgrammersResumeEducation
+	Projects        []ProgrammersResumeProject
+	Certificates    []ProgrammersResumeCertificates
+	Activities      []ProgrammersResumeActivity
+}
+
+type ProgrammersResumeWorkExperience struct {
+	CompanyName string
+	Position    string
+	StartDate   time.Time
+	Details     []ProgrammersResumeWorkExperienceDetail
+}
+
+type ProgrammersResumeWorkExperienceDetail struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
+
+type ProgrammersResumeEducation struct {
+	SchoolName string
+	MajorName  string
+	StartDate  time.Time
+	EndDate    time.Time
+}
+
+type ProgrammersResumeProject struct {
+	Name      string
+	StartDate time.Time
+	Summary   string
+	Cotent    string
+	GithubURL string
+}
+
+type ProgrammersResumeCertificates struct {
+	Name       string
+	IssuedBy   string
+	IssuedDate time.Time
+}
+
+type ProgrammersResumeActivity struct {
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
+	Content   string
+}
+
 func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeResponse {
 	r.ID = resume.ID
 	r.Introduction = resume.Introduction
