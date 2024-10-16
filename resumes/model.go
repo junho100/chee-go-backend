@@ -39,6 +39,7 @@ type Project struct {
 	GithubURL string    `gorm:"column:github_url"`
 	Name      string    `gorm:"column:name"`
 	ResumeID  uint
+	Summary   string `gorm:"column:summary"`
 }
 
 type Keyword struct {
@@ -121,6 +122,7 @@ type RegisterResumeRequestProject struct {
 	Content   string
 	GithubURL string `json:"github_url"`
 	Name      string `json:"name"`
+	Summary   string `json:"summary"`
 }
 
 type RegisterResumeRequestActivity struct {
@@ -194,6 +196,7 @@ type GetResumeResponseProject struct {
 	Content   string    `json:"content"`
 	GithubURL string    `json:"github_url"`
 	Name      string    `json:"name"`
+	Summary   string    `json:"summary"`
 }
 
 type GetResumeResponseActivity struct {
@@ -431,6 +434,7 @@ func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeRes
 			Content:   project.Content,
 			GithubURL: project.GithubURL,
 			Name:      project.Name,
+			Summary:   project.Summary,
 		}
 	}
 
@@ -545,6 +549,7 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			GithubURL: project.GithubURL,
 			ResumeID:  resume.ID,
 			Name:      project.Name,
+			Summary:   project.Summary,
 		}
 
 		if err := tx.Save(&savedProject).Error; err != nil {
