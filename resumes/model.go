@@ -407,6 +407,80 @@ type ProgrammersResumeActivity struct {
 	Content   string
 }
 
+type LinkedinResume struct {
+	Introduction    string
+	WorkExperiences []LinkedinResumeWorkExperience
+	Educations      []LinkedinResumeEducation
+	Certificates    []LinkedinResumeCertificate
+	Projects        []LinkedinResumeProject
+	Skills          []string
+}
+
+type LinkedinResumeWorkExperience struct {
+	Position    string
+	CompanyName string
+	StartDate   time.Time
+	EndDate     time.Time
+	Content     string
+}
+
+type LinkedinResumeEducation struct {
+	SchoolName string
+	MajorName  string
+	StartDate  time.Time
+	EndDate    time.Time
+}
+
+type LinkedinResumeCertificate struct {
+	Name       string
+	IssuedBy   string
+	IssuedDate string
+}
+
+type LinkedinResumeProject struct {
+	Name      string
+	StartDate string
+	EndDate   string
+	Content   string
+}
+
+type GetLinkedinResumeResponse struct {
+	Introduction    string                                    `json:"introduction"`
+	WorkExperiences []GetLinkedinResumeResponseWorkExperience `json:"work_experiences"`
+	Educations      []GetLinkedinResumeResponseEducation      `json:"educations"`
+	Certificates    []GetLinkedinResumeResponseCertificate    `json:"certificates"`
+	Projects        []GetLinkedinResumeResponseProject        `json:"projects"`
+	Skills          []string                                  `json:"skills"`
+}
+
+type GetLinkedinResumeResponseWorkExperience struct {
+	Position    string    `json:"position"`
+	CompanyName string    `json:"company_name"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Content     string    `json:"content"`
+}
+
+type GetLinkedinResumeResponseEducation struct {
+	SchoolName string    `json:"school_name"`
+	MajorName  string    `json:"major_name"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+}
+
+type GetLinkedinResumeResponseCertificate struct {
+	Name       string `json:"name"`
+	IssuedBy   string `json:"issued_by"`
+	IssuedDate string `json:"issued_date"`
+}
+
+type GetLinkedinResumeResponseProject struct {
+	Name      string `json:"name"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+	Content   string `json:"content"`
+}
+
 func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeResponse {
 	r.ID = resume.ID
 	r.Introduction = resume.Introduction
