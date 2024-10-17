@@ -124,7 +124,12 @@ func CreateToken(id string) (string, error) {
 }
 
 func ExtractToken(rawTokenHeaderValue string) (string, error) {
-	token := strings.Split(rawTokenHeaderValue, " ")[1]
+	tokenStringArray := strings.Split(rawTokenHeaderValue, " ")
+	if len(tokenStringArray) <= 1 {
+		return "", errors.New("no token")
+	}
+
+	token := tokenStringArray[1]
 
 	if token == "" {
 		return "", errors.New("no token")
