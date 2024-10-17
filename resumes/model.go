@@ -434,13 +434,13 @@ type LinkedinResumeEducation struct {
 type LinkedinResumeCertificate struct {
 	Name       string
 	IssuedBy   string
-	IssuedDate string
+	IssuedDate time.Time
 }
 
 type LinkedinResumeProject struct {
 	Name      string
-	StartDate string
-	EndDate   string
+	StartDate time.Time
+	EndDate   time.Time
 	Content   string
 }
 
@@ -469,16 +469,16 @@ type GetLinkedinResumeResponseEducation struct {
 }
 
 type GetLinkedinResumeResponseCertificate struct {
-	Name       string `json:"name"`
-	IssuedBy   string `json:"issued_by"`
-	IssuedDate string `json:"issued_date"`
+	Name       string    `json:"name"`
+	IssuedBy   string    `json:"issued_by"`
+	IssuedDate time.Time `json:"issued_date"`
 }
 
 type GetLinkedinResumeResponseProject struct {
-	Name      string `json:"name"`
-	StartDate string `json:"start_date"`
-	EndDate   string `json:"end_date"`
-	Content   string `json:"content"`
+	Name      string    `json:"name"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+	Content   string    `json:"content"`
 }
 
 func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeResponse {
@@ -980,6 +980,82 @@ func (r *GetProgrammersResumeResponse) from(resume ProgrammersResume) *GetProgra
 		r.Activities[i].StartDate = activity.StartDate
 		r.Activities[i].EndDate = activity.EndDate
 		r.Activities[i].Content = activity.Content
+	}
+
+	return r
+}
+
+func ConvertResumeToLinkedin(resume Resume, keywords []string) LinkedinResume {
+	linkedinResume := &LinkedinResume{
+		Introduction:    resume.Introduction,
+		WorkExperiences: make([]LinkedinResumeWorkExperience, len(resume.WorkExperiences)),
+		Educations:      make([]LinkedinResumeEducation, len(resume.Educations)),
+		Certificates:    make([]LinkedinResumeCertificate, len(resume.Certificates)),
+		Projects:        make([]LinkedinResumeProject, len(resume.Projects)),
+		Skills:          keywords,
+	}
+
+	for i, workExperience := range resume.WorkExperiences {
+		linkedinResume.WorkExperiences[i].Position = workExperience.Position
+		linkedinResume.WorkExperiences[i].CompanyName = workExperience.CompanyName
+		linkedinResume.WorkExperiences[i].StartDate = workExperience.StartDate
+		linkedinResume.WorkExperiences[i].EndDate = workExperience.EndDate
+
+		var content string
+		for _, detail := range workExperience.WorkExperienceDetails {
+			content += ("- " + detail.Content + "\n")
+		}
+		linkedinResume.WorkExperiences[i].Content = content
+	}
+
+	for i, education := range resume.Educations {
+		linkedinResume.Educations[i].SchoolName = education.SchoolName
+		linkedinResume.Educations[i].MajorName = education.MajorName
+		linkedinResume.Educations[i].StartDate = education.StartDate
+		linkedinResume.Educations[i].EndDate = education.EndDate
+	}
+
+	for i, certificate := range resume.Certificates {
+		linkedinResume.Certificates[i].Name = certificate.Name
+		linkedinResume.Certificates[i].IssuedBy = certificate.IssuedBy
+		linkedinResume.Certificates[i].IssuedDate = certificate.IssuedDate
+	}
+
+	for i, project := range resume.Projects {
+		linkedinResume.Projects[i].Name = project.Name
+		linkedinResume.Projects[i].StartDate = project.StartDate
+		linkedinResume.Projects[i].EndDate = project.EndDate
+
+		content := (project.Summary + "\n\n" + project.Content)
+		content += ("\n\n" + "Github: " + project.GithubURL)
+		linkedinResume.Projects[i].Content = content
+	}
+
+	return *linkedinResume
+}
+
+func (r *GetLinkedinResumeResponse) from(resume LinkedinResume) *GetLinkedinResumeResponse {
+	r.Introduction = resume.Introduction
+	r.Skills = resume.Skills
+
+	r.WorkExperiences = make([]GetLinkedinResumeResponseWorkExperience, len(resume.WorkExperiences))
+	for i, workExperience := range resume.WorkExperiences {
+		r.WorkExperiences[i] = GetLinkedinResumeResponseWorkExperience(workExperience)
+	}
+
+	r.Educations = make([]GetLinkedinResumeResponseEducation, len(resume.Educations))
+	for i, education := range resume.Educations {
+		r.Educations[i] = GetLinkedinResumeResponseEducation(education)
+	}
+
+	r.Certificates = make([]GetLinkedinResumeResponseCertificate, len(resume.Certificates))
+	for i, certificate := range resume.Certificates {
+		r.Certificates[i] = GetLinkedinResumeResponseCertificate(certificate)
+	}
+
+	r.Projects = make([]GetLinkedinResumeResponseProject, len(resume.Projects))
+	for i, project := range resume.Projects {
+		r.Projects[i] = GetLinkedinResumeResponseProject(project)
 	}
 
 	return r

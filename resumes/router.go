@@ -13,6 +13,7 @@ func RegisterResumesRouters(router *gin.RouterGroup) {
 	router.GET("", GetResume)
 	router.GET("/wanted", GetWantedResume)
 	router.GET("/programmers", GetProgrammersResume)
+	router.GET("/linkedin", GetLinkedinResume)
 }
 
 func RegisterResume(c *gin.Context) {
@@ -186,5 +187,45 @@ func GetProgrammersResume(c *gin.Context) {
 
 	var response GetProgrammersResumeResponse
 	response.from(programmersResume)
+	c.JSON(http.StatusOK, response)
+}
+
+func GetLinkedinResume(c *gin.Context) {
+	var token string
+	var err error
+	var userID string
+
+	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	if userID, err = users.GetUserIDFromToken(token); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	resume, err := GetResumeByUserID(userID)
+
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to get resume.",
+		}
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	keywords := GetKeywordsByResumeID(resume.ID)
+
+	linkedinResume := ConvertResumeToLinkedin(*resume, keywords)
+
+	var response GetLinkedinResumeResponse
+	response.from(linkedinResume)
 	c.JSON(http.StatusOK, response)
 }
