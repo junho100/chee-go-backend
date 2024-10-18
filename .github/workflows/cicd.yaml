@@ -1,0 +1,75 @@
+name: Docker Build, Push to ECR, and Deploy to Private EC2
+
+on:
+  push:
+    branches: ["master"]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  BASTION_HOST: ${{ secrets.BASTION_HOST_IP }}
+  PRIVATE_EC2_IP: ${{ secrets.PRIVATE_EC2_IP }}
+
+jobs:
+  build-push-deploy:
+    name: Build, Push, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Setup SSH Config
+        env:
+          BASTION_SSH_PRIVATE_KEY: ${{ secrets.BASTION_SSH_PRIVATE_KEY }}
+          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$BASTION_SSH_PRIVATE_KEY" > ~/.ssh/bastion_key
+          echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/bastion_key ~/.ssh/ec2_key
+          cat >>~/.ssh/config <<END
+          Host bastion
+              HostName ${{ env.BASTION_HOST }}
+              User ec2-user
+              IdentityFile ~/.ssh/bastion_key
+              StrictHostKeyChecking no
+
+          Host private-ec2
+              HostName ${{ env.PRIVATE_EC2_IP }}
+              User ec2-user
+              IdentityFile ~/.ssh/ec2_key
+              ProxyJump bastion
+              StrictHostKeyChecking no
+          END
+
+      - name: Deploy to EC2
+        run: |
+          ssh private-ec2 '
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            docker pull ${{ steps.build-image.outputs.image }}
+            docker stop cheego || true
+            docker rm cheego || true
+            docker run -d --name cheego -p 8080:8080 ${{ steps.build-image.outputs.image }}
+          '
