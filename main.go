@@ -2,6 +2,7 @@ package main
 
 import (
 	"chee-go-backend/common"
+	"chee-go-backend/health"
 	"chee-go-backend/resumes"
 	"chee-go-backend/users"
 	"log"
@@ -36,6 +37,7 @@ func main() {
 	serverRoute := r.Group("/api")
 	users.RegisterUsersRouters(serverRoute.Group("/users"))
 	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"))
+	health.RegisterUsersRouters(serverRoute.Group("/health"))
 
 	r.Run(":8080")
 }
