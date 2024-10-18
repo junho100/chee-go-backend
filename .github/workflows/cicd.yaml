@@ -7,8 +7,6 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-  BASTION_HOST: ${{ secrets.BASTION_HOST_IP }}
-  PRIVATE_EC2_IP: ${{ secrets.PRIVATE_EC2_IP }}
 
 jobs:
   build-push-deploy:
@@ -47,19 +45,17 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: Create deploy.zip
+        run: |
+          zip deploy.zip deploy.sh appspec.yaml
 
-      - name: ssh proxy command
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ env.BASTION_HOST }}
-          username: ec2-user
-          key: ${{ secrets.BASTION_SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.PRIVATE_EC2_IP }}
-          proxy_username: ec2-user
-          proxy_key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-            docker pull ${{ steps.build-image.outputs.image }}
-            docker stop cheego || true
-            docker rm cheego || true
-            docker run -d --name cheego -p 8080:8080 ${{ steps.build-image.outputs.image }}
+      - name: Upload deploy.zip to S3
+        run: |
+          aws s3 cp deploy.zip s3://${{ secrets.S3_BUCKET }}/deploy.zip
+
+      - name: Create CodeDeploy Deployment
+        run: |
+          aws deploy create-deployment \
+          --application-name ${{ secrets.APPLICATION_NAME }} \
+          --deployment-group-name ${{ secrets.DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=${{ secrets.S3_BUCKET }},key=deploy.zip,bundleType=zip
