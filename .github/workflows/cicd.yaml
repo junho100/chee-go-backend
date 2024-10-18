@@ -47,7 +47,7 @@ jobs:
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
       - name: Create deploy.zip
         run: |
-          zip deploy.zip deploy.sh appspec.yaml
+          zip deploy.zip deploy.sh appspec.yml
 
       - name: Upload deploy.zip to S3
         run: |
