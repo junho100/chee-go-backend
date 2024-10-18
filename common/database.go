@@ -22,8 +22,10 @@ func GetDB() *gorm.DB {
 func Init() *gorm.DB {
 	db_username := os.Getenv("DB_USERNAME")
 	db_password := os.Getenv("DB_PASSWORD")
+	db_host := os.Getenv("DB_HOST")
+	db_name := os.Getenv("DB_NAME")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/test_db?charset=utf8mb4&parseTime=True&loc=Local", db_username, db_password)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", db_username, db_password, db_host, db_name)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
