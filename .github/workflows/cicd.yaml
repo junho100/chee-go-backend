@@ -48,20 +48,41 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-      - name: Deploy to EC2 via Bastion
-        uses: appleboy/ssh-action@master
-        with:
-          key: ${{ secrets.BASTION_SSH_PRIVATE_KEY }}
-          host: ${{ env.BASTION_HOST }}
-          username: ec2-user
-          script: |
-            cp $HOME/keys/bastion-host-key ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
-            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ env.PRIVATE_EC2_IP }} '
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }} &&
-            docker pull ${{ steps.build-image.outputs.image }} &&
-            docker stop cheego || true &&
-            docker rm cheego || true &&
+      - name: Setup SSH Config
+        env:
+          BASTION_SSH_PRIVATE_KEY: ${{ secrets.BASTION_SSH_PRIVATE_KEY }}
+          EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$BASTION_SSH_PRIVATE_KEY" > ~/.ssh/bastion_key
+          echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/bastion_key
+          chmod 600 ~/.ssh/ec2_key
+          cat >>~/.ssh/config <<END
+          Host bastion
+              HostName ${{ env.BASTION_HOST }}
+              User ec2-user
+              IdentityFile ~/.ssh/bastion_key
+              StrictHostKeyChecking no
+
+          Host private-ec2
+              HostName ${{ env.PRIVATE_EC2_IP }}
+              User ec2-user
+              IdentityFile ~/.ssh/ec2_key
+              ProxyJump bastion
+              StrictHostKeyChecking no
+          END
+
+      - name: Deploy to EC2
+        run: |
+          ssh private-ec2 '
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            docker pull ${{ steps.build-image.outputs.image }}
+            docker stop cheego || true
+            docker rm cheego || true
             docker run -d --name cheego -p 8080:8080 ${{ steps.build-image.outputs.image }}
-            '
-            rm ~/.ssh/id_rsa
+          '
+      - name: Debug SSH Connection
+        run: |
+          ssh -vvv bastion 'echo "Connected to Bastion"'
+          ssh -vvv private-ec2 'echo "Connected to Private EC2"'
