@@ -30,7 +30,7 @@ type CreateUserDto struct {
 }
 
 type CheckIDResponse struct {
-	IsExists bool
+	IsExists bool `json:"is_exists"`
 }
 
 type LoginResponse struct {
