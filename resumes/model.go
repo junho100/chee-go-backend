@@ -840,6 +840,7 @@ func ConvertResumeToWanted(resume Resume, keywords []string) WantedResume {
 		wantedResume.Certificates[idx].Name = activity.Name
 		wantedResume.Certificates[idx].StartDate = activity.StartDate
 		wantedResume.Certificates[idx].Content = activity.Content
+		idx++
 	}
 
 	return *wantedResume
