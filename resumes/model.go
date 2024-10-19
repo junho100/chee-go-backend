@@ -1004,7 +1004,8 @@ func ConvertResumeToLinkedin(resume Resume, keywords []string) LinkedinResume {
 
 		var content string
 		for _, detail := range workExperience.WorkExperienceDetails {
-			content += ("- " + detail.Content + "\n")
+			content += (detail.Name + "\n")
+			content += (detail.Content + "\n\n")
 		}
 		linkedinResume.WorkExperiences[i].Content = content
 	}
