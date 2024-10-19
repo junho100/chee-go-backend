@@ -4,4 +4,4 @@ aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS
 docker pull $url:latest
 docker stop cheego || true
 docker rm cheego || true
-docker run -d --name cheego -p 8080:8080 $url:latest
+docker run -d --name cheego -p 8080:8080 --log-driver=awslogs --log-opt awslogs-region="ap-northeast-2" --log-opt awslogs-group=/cheego/backend --log-opt awslogs-stream=backend --log-opt awslogs-create-group=true $url:latest
