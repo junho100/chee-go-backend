@@ -597,9 +597,19 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 		savedEducation := &Education{
 			SchoolName: education.SchoolName,
 			MajorName:  education.MajorName,
-			StartDate:  education.StartDate,
-			EndDate:    education.EndDate,
 			ResumeID:   resume.ID,
+		}
+
+		if education.StartDate.IsZero() {
+			savedEducation.StartDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedEducation.StartDate = education.StartDate
+		}
+
+		if education.EndDate.IsZero() {
+			savedEducation.EndDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedEducation.EndDate = education.EndDate
 		}
 
 		if err := tx.Save(&savedEducation).Error; err != nil {
@@ -617,13 +627,23 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 
 	for _, project := range dto.Projects {
 		savedProject := &Project{
-			StartDate: project.StartDate,
-			EndDate:   project.EndDate,
 			Content:   project.Content,
 			GithubURL: project.GithubURL,
 			ResumeID:  resume.ID,
 			Name:      project.Name,
 			Summary:   project.Summary,
+		}
+
+		if project.StartDate.IsZero() {
+			savedProject.StartDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedProject.StartDate = project.StartDate
+		}
+
+		if project.EndDate.IsZero() {
+			savedProject.EndDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedProject.EndDate = project.EndDate
 		}
 
 		if err := tx.Save(&savedProject).Error; err != nil {
@@ -641,11 +661,21 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 
 	for _, activity := range dto.Activities {
 		savedActivity := &Activity{
-			Name:      activity.Name,
-			Content:   activity.Content,
-			ResumeID:  resume.ID,
-			StartDate: activity.StartDate,
-			EndDate:   activity.EndDate,
+			Name:     activity.Name,
+			Content:  activity.Content,
+			ResumeID: resume.ID,
+		}
+
+		if activity.StartDate.IsZero() {
+			savedActivity.StartDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedActivity.StartDate = activity.StartDate
+		}
+
+		if activity.EndDate.IsZero() {
+			savedActivity.EndDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedActivity.EndDate = activity.EndDate
 		}
 
 		if err := tx.Save(&savedActivity).Error; err != nil {
@@ -663,10 +693,15 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 
 	for _, certificate := range dto.Certificates {
 		savedCertificate := &Certificate{
-			Name:       certificate.Name,
-			IssuedBy:   certificate.IssuedBy,
-			IssuedDate: certificate.IssuedDate,
-			ResumeID:   resume.ID,
+			Name:     certificate.Name,
+			IssuedBy: certificate.IssuedBy,
+			ResumeID: resume.ID,
+		}
+
+		if certificate.IssuedDate.IsZero() {
+			savedCertificate.IssuedDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedCertificate.IssuedDate = certificate.IssuedDate
 		}
 
 		if err := tx.Save(&savedCertificate).Error; err != nil {
@@ -689,8 +724,18 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 			Position:    workExperience.Position,
 			Job:         workExperience.Job,
 			ResumeID:    resume.ID,
-			StartDate:   workExperience.StartDate,
-			EndDate:     workExperience.EndDate,
+		}
+
+		if workExperience.StartDate.IsZero() {
+			savedWorkExperience.StartDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedWorkExperience.StartDate = workExperience.StartDate
+		}
+
+		if workExperience.EndDate.IsZero() {
+			savedWorkExperience.EndDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedWorkExperience.EndDate = workExperience.EndDate
 		}
 
 		if err := tx.Save(&savedWorkExperience).Error; err != nil {
@@ -701,10 +746,20 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 		for _, detail := range workExperience.Details {
 			savedDetail := &WorkExperienceDetail{
 				Name:             detail.Name,
-				StartDate:        detail.StartDate,
-				EndDate:          detail.EndDate,
 				Content:          detail.Content,
 				WorkExperienceID: savedWorkExperience.ID,
+			}
+
+			if detail.StartDate.IsZero() {
+				savedDetail.StartDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+			} else {
+				savedDetail.StartDate = detail.StartDate
+			}
+
+			if detail.EndDate.IsZero() {
+				savedDetail.EndDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+			} else {
+				savedDetail.EndDate = detail.EndDate
 			}
 
 			if err := tx.Save(&savedDetail).Error; err != nil {
