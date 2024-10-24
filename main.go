@@ -23,6 +23,8 @@ func main() {
 	DB := common.Init()
 	DB.AutoMigrate(&users.User{}, &resumes.Resume{}, &resumes.Education{}, &resumes.Project{}, &resumes.Keyword{}, &resumes.KeywordResume{}, &resumes.Activity{}, &resumes.Certificate{}, &resumes.WorkExperience{}, &resumes.WorkExperienceDetail{}, &lectures.Subject{}, &lectures.Lecture{})
 
+	common.InitYoutube()
+
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000", "https://chee-go.com"},
