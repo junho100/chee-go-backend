@@ -3,6 +3,7 @@ package main
 import (
 	"chee-go-backend/common"
 	"chee-go-backend/health"
+	"chee-go-backend/lectures"
 	"chee-go-backend/resumes"
 	"chee-go-backend/users"
 	"log"
@@ -38,6 +39,7 @@ func main() {
 	users.RegisterUsersRouters(serverRoute.Group("/users"))
 	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"))
 	health.RegisterUsersRouters(serverRoute.Group("/health"))
+	lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"))
 
 	r.Run(":8080")
 }
