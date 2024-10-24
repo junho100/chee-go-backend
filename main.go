@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 	DB := common.Init()
-	DB.AutoMigrate(&users.User{}, &resumes.Resume{}, &resumes.Education{}, &resumes.Project{}, &resumes.Keyword{}, &resumes.KeywordResume{}, &resumes.Activity{}, &resumes.Certificate{}, &resumes.WorkExperience{}, &resumes.WorkExperienceDetail{})
+	DB.AutoMigrate(&users.User{}, &resumes.Resume{}, &resumes.Education{}, &resumes.Project{}, &resumes.Keyword{}, &resumes.KeywordResume{}, &resumes.Activity{}, &resumes.Certificate{}, &resumes.WorkExperience{}, &resumes.WorkExperienceDetail{}, &lectures.Subject{}, &lectures.Lecture{})
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
