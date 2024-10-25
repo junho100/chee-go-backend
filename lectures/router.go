@@ -59,5 +59,19 @@ func RegisterLecture(c *gin.Context) {
 }
 
 func GetLectures(c *gin.Context) {
+	var getLecturesResponse GetLecturesResponse
 
+	subjects := GetAllSubjects()
+	getLecturesResponse.Subjects = make([]GetLecturesResponseSubject, len(subjects))
+	for i, subject := range subjects {
+		getLecturesResponse.Subjects[i] = GetLecturesResponseSubject{
+			ID:           subject.ID,
+			Title:        subject.SubjectName,
+			Description:  subject.Name,
+			ThumbnailURL: subject.ThumbnailURL,
+			Instructor:   subject.LecturerName,
+		}
+	}
+
+	c.JSON(http.StatusOK, getLecturesResponse)
 }

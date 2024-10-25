@@ -13,6 +13,7 @@ type Subject struct {
 	LecturerName      string `gorm:"column:lecturer_name"`
 	ThumbnailURL      string `gorm:"column:thumbnail_url;type:text"`
 	YoutubePlayListID string `gorm:"column:youtube_playlist_id"`
+	SubjectName       string `gorm:"subject_name"`
 	Lectures          []Lecture
 }
 
@@ -30,6 +31,18 @@ type RegisterLectureRequest struct {
 
 type RegisterLectureResponse struct {
 	IsSuccess bool `json:"is_success"`
+}
+
+type GetLecturesResponse struct {
+	Subjects []GetLecturesResponseSubject `json:"subjects"`
+}
+
+type GetLecturesResponseSubject struct {
+	ID           uint   `json:"id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	ThumbnailURL string `json:"thumbnailUrl"`
+	Instructor   string `json:"instructor"`
 }
 
 func CreateSubjectWithLectures(playList *youtube.PlaylistListResponse, playListItems []*youtube.PlaylistItem) error {
@@ -71,4 +84,16 @@ func CreateSubjectWithLectures(playList *youtube.PlaylistListResponse, playListI
 	}
 
 	return tx.Commit().Error
+}
+
+func GetAllSubjects() []Subject {
+	var subjects []Subject
+
+	db := common.GetDB()
+
+	if err := db.Find(&subjects).Error; err != nil {
+		return make([]Subject, 0)
+	}
+
+	return subjects
 }
