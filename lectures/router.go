@@ -2,6 +2,7 @@ package lectures
 
 import (
 	"chee-go-backend/common"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -29,6 +30,7 @@ func RegisterLecture(c *gin.Context) {
 	youtubePlayListResponse, err := common.GetPlayListByID(registerLectureRequest.PlayListID)
 
 	if err != nil {
+		log.Println(err)
 		response := &common.CommonErrorResponse{
 			Message: "failed to get play list.",
 		}
@@ -39,6 +41,7 @@ func RegisterLecture(c *gin.Context) {
 	youtubePlayListItems, err := common.ListVideosByPlayListID(registerLectureRequest.PlayListID)
 
 	if err != nil {
+		log.Println(err)
 		response := &common.CommonErrorResponse{
 			Message: "failed to get play list items.",
 		}
