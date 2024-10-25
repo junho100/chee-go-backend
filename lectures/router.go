@@ -3,6 +3,7 @@ package lectures
 import (
 	"chee-go-backend/common"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,7 @@ import (
 func RegisterLecturesRouters(router *gin.RouterGroup) {
 	router.POST("", RegisterLecture)
 	router.GET("", GetLectures)
+	router.GET(":id", GetLecture)
 }
 
 func RegisterLecture(c *gin.Context) {
@@ -74,4 +76,29 @@ func GetLectures(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, getLecturesResponse)
+}
+
+func GetLecture(c *gin.Context) {
+	subjectID, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "bad path variable.",
+		}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	subject, err := GetSubjectByID(uint(subjectID))
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to get subject.",
+		}
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	var response GetLectureResponse
+	response.from(*subject)
+	c.JSON(http.StatusOK, response)
 }
