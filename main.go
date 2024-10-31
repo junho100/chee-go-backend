@@ -41,7 +41,7 @@ func main() {
 	users.RegisterUsersRouters(serverRoute.Group("/users"))
 	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"))
 	health.RegisterUsersRouters(serverRoute.Group("/health"))
-	lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"))
+	lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"), DB)
 
 	r.Run(":8080")
 }

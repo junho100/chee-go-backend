@@ -1,7 +1,6 @@
 package lectures
 
 import (
-	"chee-go-backend/common"
 	"errors"
 
 	"google.golang.org/api/youtube/v3"
@@ -62,7 +61,7 @@ type GetLectureResponseVideo struct {
 func CreateSubjectWithLectures(playList *youtube.PlaylistListResponse, playListItems []*youtube.PlaylistItem) error {
 	var subject *Subject
 
-	db := common.GetDB()
+	db := DB
 	tx := db.Begin()
 
 	if err := db.Where(&Subject{
@@ -103,7 +102,7 @@ func CreateSubjectWithLectures(playList *youtube.PlaylistListResponse, playListI
 func GetAllSubjects() []Subject {
 	var subjects []Subject
 
-	db := common.GetDB()
+	db := DB
 
 	if err := db.Find(&subjects).Error; err != nil {
 		return make([]Subject, 0)
@@ -128,7 +127,7 @@ func (c *GetLectureResponse) from(subject Subject) {
 }
 
 func GetSubjectByID(subjectID uint) (*Subject, error) {
-	db := common.GetDB()
+	db := DB
 	var subject Subject
 
 	if err := db.Preload(clause.Associations).Where(&Subject{

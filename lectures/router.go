@@ -7,12 +7,17 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func RegisterLecturesRouters(router *gin.RouterGroup) {
+var DB *gorm.DB
+
+func RegisterLecturesRouters(router *gin.RouterGroup, db *gorm.DB) {
 	router.POST("", RegisterLecture)
 	router.GET("", GetLectures)
 	router.GET(":id", GetLecture)
+
+	DB = db
 }
 
 func RegisterLecture(c *gin.Context) {
