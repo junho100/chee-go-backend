@@ -1,7 +1,6 @@
 package resumes
 
 import (
-	"chee-go-backend/common"
 	"chee-go-backend/users"
 	"time"
 
@@ -562,7 +561,7 @@ func (r *GetResumeResponse) from(resume Resume, keywords []string) *GetResumeRes
 
 func CreateResume(dto *CreateResumeDTO) (uint, error) {
 	var resume Resume
-	db := common.GetDB()
+	db := DB
 	tx := db.Begin()
 
 	if err := db.Where(&Resume{
@@ -807,7 +806,7 @@ func CreateResume(dto *CreateResumeDTO) (uint, error) {
 
 func GetResumeByUserID(userID string) (*Resume, error) {
 	var resume Resume
-	db := common.GetDB()
+	db := DB
 
 	if err := db.Preload("WorkExperiences.WorkExperienceDetails").
 		Preload(clause.Associations).Where(Resume{
@@ -821,7 +820,7 @@ func GetResumeByUserID(userID string) (*Resume, error) {
 
 func GetKeywordsByResumeID(id uint) []string {
 	var keywordResumes []KeywordResume
-	db := common.GetDB()
+	db := DB
 
 	if err := db.Preload("Keyword").Where(&KeywordResume{
 		ResumeID: id,

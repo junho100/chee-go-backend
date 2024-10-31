@@ -38,8 +38,8 @@ func main() {
 	r.SetTrustedProxies(nil)
 
 	serverRoute := r.Group("/api")
-	users.RegisterUsersRouters(serverRoute.Group("/users"))
-	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"))
+	users.RegisterUsersRouters(serverRoute.Group("/users"), DB)
+	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"), DB)
 	health.RegisterUsersRouters(serverRoute.Group("/health"))
 	lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"), DB)
 

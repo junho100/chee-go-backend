@@ -6,13 +6,18 @@ import (
 	"chee-go-backend/common"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func RegisterUsersRouters(router *gin.RouterGroup) {
+var DB *gorm.DB
+
+func RegisterUsersRouters(router *gin.RouterGroup, db *gorm.DB) {
 	router.POST("", SignUp)
 	router.GET("/check-id", CheckID)
 	router.POST("/login", Login)
 	router.POST("/me", CheckMe)
+
+	DB = db
 }
 
 func SignUp(c *gin.Context) {

@@ -6,14 +6,19 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func RegisterResumesRouters(router *gin.RouterGroup) {
+var DB *gorm.DB
+
+func RegisterResumesRouters(router *gin.RouterGroup, db *gorm.DB) {
 	router.POST("", RegisterResume)
 	router.GET("", GetResume)
 	router.GET("/wanted", GetWantedResume)
 	router.GET("/programmers", GetProgrammersResume)
 	router.GET("/linkedin", GetLinkedinResume)
+
+	DB = db
 }
 
 func RegisterResume(c *gin.Context) {

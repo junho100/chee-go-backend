@@ -41,8 +41,8 @@ func SetUpTestRouter(db *gorm.DB) *gin.Engine {
 	r.SetTrustedProxies(nil)
 
 	serverRoute := r.Group("/api")
-	users.RegisterUsersRouters(serverRoute.Group("/users"))
-	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"))
+	users.RegisterUsersRouters(serverRoute.Group("/users"), db)
+	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"), db)
 	health.RegisterUsersRouters(serverRoute.Group("/health"))
 	lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"), db)
 

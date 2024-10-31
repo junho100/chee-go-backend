@@ -1,7 +1,6 @@
 package users
 
 import (
-	"chee-go-backend/common"
 	"errors"
 	"fmt"
 	"strings"
@@ -64,7 +63,7 @@ func CreateUser(dto *CreateUserDto) error {
 		HashedPassword: string(hashedPassword),
 	}
 
-	db := common.GetDB()
+	db := DB
 	tx := db.Begin()
 
 	if err := tx.Create(&user).Error; err != nil {
@@ -76,7 +75,7 @@ func CreateUser(dto *CreateUserDto) error {
 }
 
 func CheckUserByID(id string) bool {
-	db := common.GetDB()
+	db := DB
 	var user User
 	if err := db.Where(User{
 		ID: id,
@@ -88,7 +87,7 @@ func CheckUserByID(id string) bool {
 }
 
 func GetUserByID(id string) (*User, error) {
-	db := common.GetDB()
+	db := DB
 	var user User
 	if err := db.Where(User{
 		ID: id,
