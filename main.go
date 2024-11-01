@@ -1,47 +1,33 @@
 package main
 
 import (
-	"chee-go-backend/common"
-	"chee-go-backend/health"
-	"chee-go-backend/lectures"
-	"chee-go-backend/resumes"
-	"chee-go-backend/users"
-	"log"
-	"time"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"chee-go-backend/internal/config"
+	"chee-go-backend/internal/http"
+	"chee-go-backend/internal/repository"
 )
 
 func main() {
-	err := godotenv.Load(".env")
+	config := config.NewConfig()
+	router := http.NewRouter()
 
-	if err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
-	}
-	DB := common.Init()
-	DB.AutoMigrate(&users.User{}, &resumes.Resume{}, &resumes.Education{}, &resumes.Project{}, &resumes.Keyword{}, &resumes.KeywordResume{}, &resumes.Activity{}, &resumes.Certificate{}, &resumes.WorkExperience{}, &resumes.WorkExperienceDetail{}, &lectures.Subject{}, &lectures.Lecture{})
+	lectureRepository := repository.NewLectureRepository(config.DB)
+	resumeRepository := repository.NewResumeRepository(config.DB)
+	userRepository := repository.NewUserRepository(config.DB)
 
-	common.InitYoutube()
+	// lectureService := service.NewLectureService(lectureRepository)
+	// resumeService := service.NewResumeService(resumeRepository)
+	// userService := service.NewUserService(userRepository)
 
-	r := gin.Default()
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "https://chee-go.com", "https://www.chee-go.com"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	// http.NewLectureHandler(router, lectureService)
+	// http.NewResumeHandler(router, resumeService)
+	// http.NewUserHandler(router, userService)
+	// http.NewHealthCheck(router)
 
-	r.SetTrustedProxies(nil)
+	// serverRoute := r.Group("/api")
+	// users.RegisterUsersRouters(serverRoute.Group("/users"), DB)
+	// resumes.RegisterResumesRouters(serverRoute.Group("/resumes"), DB)
+	// health.RegisterUsersRouters(serverRoute.Group("/health"))
+	// lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"), DB)
 
-	serverRoute := r.Group("/api")
-	users.RegisterUsersRouters(serverRoute.Group("/users"), DB)
-	resumes.RegisterResumesRouters(serverRoute.Group("/resumes"), DB)
-	health.RegisterUsersRouters(serverRoute.Group("/health"))
-	lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"), DB)
-
-	r.Run(":8080")
+	router.Run(":8080")
 }
