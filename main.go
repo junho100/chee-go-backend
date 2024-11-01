@@ -4,6 +4,7 @@ import (
 	"chee-go-backend/internal/config"
 	"chee-go-backend/internal/http"
 	"chee-go-backend/internal/repository"
+	"chee-go-backend/internal/service"
 )
 
 func main() {
@@ -14,9 +15,9 @@ func main() {
 	resumeRepository := repository.NewResumeRepository(config.DB)
 	userRepository := repository.NewUserRepository(config.DB)
 
-	// lectureService := service.NewLectureService(lectureRepository)
-	// resumeService := service.NewResumeService(resumeRepository)
-	// userService := service.NewUserService(userRepository)
+	lectureService := service.NewLectureService(lectureRepository)
+	resumeService := service.NewResumeService(resumeRepository)
+	userService := service.NewUserService(userRepository)
 
 	// http.NewLectureHandler(router, lectureService)
 	// http.NewResumeHandler(router, resumeService)
