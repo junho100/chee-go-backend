@@ -3,6 +3,7 @@ package main
 import (
 	"chee-go-backend/internal/config"
 	"chee-go-backend/internal/http"
+	"chee-go-backend/internal/http/handler"
 	"chee-go-backend/internal/repository"
 	"chee-go-backend/internal/service"
 )
@@ -19,16 +20,10 @@ func main() {
 	resumeService := service.NewResumeService(resumeRepository)
 	userService := service.NewUserService(userRepository)
 
-	// http.NewLectureHandler(router, lectureService)
-	// http.NewResumeHandler(router, resumeService)
-	// http.NewUserHandler(router, userService)
-	// http.NewHealthCheck(router)
-
-	// serverRoute := r.Group("/api")
-	// users.RegisterUsersRouters(serverRoute.Group("/users"), DB)
-	// resumes.RegisterResumesRouters(serverRoute.Group("/resumes"), DB)
-	// health.RegisterUsersRouters(serverRoute.Group("/health"))
-	// lectures.RegisterLecturesRouters(serverRoute.Group("/lectures"), DB)
+	handler.NewLectureHandler(router, lectureService)
+	handler.NewResumeHandler(router, resumeService)
+	handler.NewUserHandler(router, userService)
+	handler.NewHealthCheck(router)
 
 	router.Run(":8080")
 }
