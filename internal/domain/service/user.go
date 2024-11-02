@@ -8,7 +8,7 @@ import (
 type UserService interface {
 	CreateUser(createUserDto *dto.CreateUserDto) error
 	CheckUserByID(id string) bool
-	GetUserByID(id string) (entity.User, error)
+	GetUserByID(id string) (*entity.User, error)
 	CheckPassword(password string, hashedPassword string) error
 	CreateToken(id string) (string, error)
 	GetUserIDFromToken(token string) (string, error)
