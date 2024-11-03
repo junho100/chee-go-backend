@@ -8,6 +8,6 @@ import (
 
 func NewHealthCheck(router *gin.Engine) {
 	router.GET("/api/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "")
+		c.JSON(http.StatusOK, nil)
 	})
 }

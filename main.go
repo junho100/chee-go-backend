@@ -21,7 +21,7 @@ func main() {
 	userService := service.NewUserService(userRepository)
 
 	handler.NewLectureHandler(router, lectureService)
-	handler.NewResumeHandler(router, resumeService)
+	handler.NewResumeHandler(router, resumeService, userService)
 	handler.NewUserHandler(router, userService)
 	handler.NewHealthCheck(router)
 

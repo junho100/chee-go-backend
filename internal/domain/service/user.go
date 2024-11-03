@@ -12,4 +12,5 @@ type UserService interface {
 	CheckPassword(password string, hashedPassword string) error
 	CreateToken(id string) (string, error)
 	GetUserIDFromToken(token string) (string, error)
+	ExtractToken(rawTokenHeaderValue string) (string, error)
 }

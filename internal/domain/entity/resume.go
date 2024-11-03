@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"chee-go-backend/users"
 	"time"
 )
 
@@ -11,7 +10,7 @@ type Resume struct {
 	GithubURL       string `gorm:"column:github_url"`
 	BlogURL         string `gorm:"column:blog_url"`
 	UserID          string
-	User            users.User
+	User            User
 	Educations      []Education
 	Projects        []Project
 	Activities      []Activity
