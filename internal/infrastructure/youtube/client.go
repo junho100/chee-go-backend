@@ -1,37 +1,28 @@
-package common
+package youtube
 
 import (
-	"context"
 	"errors"
-	"log"
-	"os"
 
-	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
 
-var SERVICE *youtube.Service
-
-func GetService() *youtube.Service {
-	return SERVICE
+type YoutubeClient interface {
+	ListVideosByPlayListID(playListID string) ([]*youtube.PlaylistItem, error)
+	GetPlayListByID(playListID string) (*youtube.PlaylistListResponse, error)
 }
 
-func InitYoutube() {
-	ctx := context.Background()
-	apiKey := os.Getenv("YOUTUBE_API_KEY")
+type youtubeClient struct {
+	youtubeService *youtube.Service
+}
 
-	service, err := youtube.NewService(ctx, option.WithAPIKey(apiKey))
-
-	if err != nil {
-		log.Fatalf("Error creating YouTube client: %v", err)
+func NewYoutubeClient(youtubeService *youtube.Service) YoutubeClient {
+	return &youtubeClient{
+		youtubeService: youtubeService,
 	}
-
-	SERVICE = service
 }
 
-func ListVideosByPlayListID(playListID string) ([]*youtube.PlaylistItem, error) {
-	service := GetService()
-	call := service.PlaylistItems.List([]string{"snippet"}).PlaylistId(playListID)
+func (c *youtubeClient) ListVideosByPlayListID(playListID string) ([]*youtube.PlaylistItem, error) {
+	call := c.youtubeService.PlaylistItems.List([]string{"snippet"}).PlaylistId(playListID)
 
 	response, err := call.Do()
 	if err != nil {
@@ -67,9 +58,8 @@ func ListVideosByPlayListID(playListID string) ([]*youtube.PlaylistItem, error) 
 	return result, nil
 }
 
-func GetPlayListByID(playListID string) (*youtube.PlaylistListResponse, error) {
-	service := GetService()
-	call := service.Playlists.List([]string{"snippet"})
+func (c *youtubeClient) GetPlayListByID(playListID string) (*youtube.PlaylistListResponse, error) {
+	call := c.youtubeService.Playlists.List([]string{"snippet"})
 	response, err := call.Id(playListID).Do()
 
 	if err != nil {

@@ -1,27 +1,31 @@
-package users
+package handler
 
 import (
+	"chee-go-backend/internal/common"
+	"chee-go-backend/internal/domain/service"
+	"chee-go-backend/internal/http/dto"
 	"net/http"
 
-	"chee-go-backend/common"
-
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func RegisterUsersRouters(router *gin.RouterGroup, db *gorm.DB) {
-	router.POST("", SignUp)
-	router.GET("/check-id", CheckID)
-	router.POST("/login", Login)
-	router.POST("/me", CheckMe)
-
-	DB = db
+type UserHandler struct {
+	userService service.UserService
 }
 
-func SignUp(c *gin.Context) {
-	var signUpRequest SignUpRequest
+func NewUserHandler(router *gin.Engine, userService service.UserService) {
+	handler := &UserHandler{
+		userService: userService,
+	}
+
+	router.POST("/api/users", handler.SignUp)
+	router.GET("/api/users/check-id", handler.CheckIdExists)
+	router.POST("/api/users/login", handler.Login)
+	router.POST("/api/users/me", handler.CheckMe)
+}
+
+func (h *UserHandler) SignUp(c *gin.Context) {
+	var signUpRequest dto.SignUpRequest
 
 	if err := c.BindJSON(&signUpRequest); err != nil {
 		response := &common.CommonErrorResponse{
@@ -31,13 +35,13 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	dto := &CreateUserDto{
+	createUserDto := &dto.CreateUserDto{
 		ID:       signUpRequest.ID,
 		Email:    signUpRequest.Email,
 		Password: signUpRequest.Password,
 	}
 
-	if err := CreateUser(dto); err != nil {
+	if err := h.userService.CreateUser(createUserDto); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to create user.",
 		}
@@ -45,23 +49,25 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	response := &SignUpResponse{
-		ID: dto.ID,
+	response := &dto.SignUpResponse{
+		ID: createUserDto.ID,
 	}
+
 	c.JSON(http.StatusCreated, response)
 }
 
-func CheckID(c *gin.Context) {
+func (h *UserHandler) CheckIdExists(c *gin.Context) {
 	id := c.Query("id")
 
-	response := &CheckIDResponse{
-		IsExists: CheckUserByID(id),
+	response := &dto.CheckIDResponse{
+		IsExists: h.userService.CheckUserByID(id),
 	}
+
 	c.JSON(http.StatusOK, response)
 }
 
-func Login(c *gin.Context) {
-	var loginRequest LoginRequest
+func (h *UserHandler) Login(c *gin.Context) {
+	var loginRequest dto.LoginRequest
 
 	if err := c.BindJSON(&loginRequest); err != nil {
 		response := &common.CommonErrorResponse{
@@ -71,7 +77,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	user, err := GetUserByID(loginRequest.ID)
+	user, err := h.userService.GetUserByID(loginRequest.ID)
 
 	if err != nil {
 		response := &common.CommonErrorResponse{
@@ -81,7 +87,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if CheckPassword(loginRequest.Password, user.HashedPassword) != nil {
+	if h.userService.CheckPassword(loginRequest.Password, user.HashedPassword) != nil {
 		response := &common.CommonErrorResponse{
 			Message: "login failed.",
 		}
@@ -89,7 +95,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, err := CreateToken(loginRequest.ID)
+	token, err := h.userService.CreateToken(loginRequest.ID)
 	if err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "login failed.",
@@ -98,14 +104,14 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	response := &LoginResponse{
+	response := &dto.LoginResponse{
 		Token: token,
 	}
 	c.JSON(http.StatusCreated, response)
 }
 
-func CheckMe(c *gin.Context) {
-	var checkMeRequest CheckMeRequest
+func (h *UserHandler) CheckMe(c *gin.Context) {
+	var checkMeRequest dto.CheckMeRequest
 
 	if err := c.BindJSON(&checkMeRequest); err != nil {
 		response := &common.CommonErrorResponse{
@@ -117,7 +123,7 @@ func CheckMe(c *gin.Context) {
 
 	var userID string
 	var err error
-	if userID, err = GetUserIDFromToken(checkMeRequest.Token); err != nil {
+	if userID, err = h.userService.GetUserIDFromToken(checkMeRequest.Token); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "invalid token.",
 		}
@@ -125,7 +131,7 @@ func CheckMe(c *gin.Context) {
 		return
 	}
 
-	response := &CheckMeResponse{
+	response := &dto.CheckMeResponse{
 		UserID: userID,
 	}
 	c.JSON(http.StatusCreated, response)

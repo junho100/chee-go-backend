@@ -1,31 +1,37 @@
-package resumes
+package handler
 
 import (
-	"chee-go-backend/common"
-	"chee-go-backend/users"
+	"chee-go-backend/internal/common"
+	"chee-go-backend/internal/domain/service"
+	"chee-go-backend/internal/http/dto"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func RegisterResumesRouters(router *gin.RouterGroup, db *gorm.DB) {
-	router.POST("", RegisterResume)
-	router.GET("", GetResume)
-	router.GET("/wanted", GetWantedResume)
-	router.GET("/programmers", GetProgrammersResume)
-	router.GET("/linkedin", GetLinkedinResume)
-
-	DB = db
+type ResumeHandler struct {
+	resumeService service.ResumeService
+	userService   service.UserService
 }
 
-func RegisterResume(c *gin.Context) {
+func NewResumeHandler(router *gin.Engine, resumeService service.ResumeService, userService service.UserService) {
+	handler := &ResumeHandler{
+		resumeService: resumeService,
+		userService:   userService,
+	}
+
+	router.POST("/api/resumes", handler.CreateResume)
+	router.GET("/api/resumes", handler.GetResume)
+	router.GET("/api/resumes/wanted", handler.GetWantedResume)
+	router.GET("/api/resumes/programmers", handler.GetProgrammersResume)
+	router.GET("/api/resumes/linkedin", handler.GetLinkedinResume)
+}
+
+func (h *ResumeHandler) CreateResume(c *gin.Context) {
 	var token string
 	var err error
 	var userID string
-	var registerResumeRequest RegisterResumeRequest
+	var registerResumeRequest dto.RegisterResumeRequest
 
 	if err := c.BindJSON(&registerResumeRequest); err != nil {
 		response := &common.CommonErrorResponse{
@@ -35,7 +41,7 @@ func RegisterResume(c *gin.Context) {
 		return
 	}
 
-	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -43,7 +49,7 @@ func RegisterResume(c *gin.Context) {
 		return
 	}
 
-	if userID, err = users.GetUserIDFromToken(token); err != nil {
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -52,7 +58,7 @@ func RegisterResume(c *gin.Context) {
 	}
 
 	// TODO: Mapping correctly
-	dto := &CreateResumeDTO{
+	createResumeDto := &dto.CreateResumeDTO{
 		Introduction:    registerResumeRequest.Introduction,
 		GithubURL:       registerResumeRequest.GithubURL,
 		BlogURL:         registerResumeRequest.BlogURL,
@@ -66,25 +72,25 @@ func RegisterResume(c *gin.Context) {
 	}
 
 	var resumeID uint
-	if resumeID, err = CreateResume(dto); err != nil {
+	if resumeID, err = h.resumeService.CreateResume(createResumeDto); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to create resume.",
 		}
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := &RegisterResumeResponse{
+	response := &dto.RegisterResumeResponse{
 		ResumeID: resumeID,
 	}
 	c.JSON(http.StatusCreated, response)
 }
 
-func GetResume(c *gin.Context) {
+func (h *ResumeHandler) GetResume(c *gin.Context) {
 	var token string
 	var err error
 	var userID string
 
-	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -92,7 +98,7 @@ func GetResume(c *gin.Context) {
 		return
 	}
 
-	if userID, err = users.GetUserIDFromToken(token); err != nil {
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -100,7 +106,7 @@ func GetResume(c *gin.Context) {
 		return
 	}
 
-	resume, err := GetResumeByUserID(userID)
+	resume, err := h.resumeService.GetResumeByUserID(userID)
 
 	if err != nil {
 		response := &common.CommonErrorResponse{
@@ -110,19 +116,19 @@ func GetResume(c *gin.Context) {
 		return
 	}
 
-	keywords := GetKeywordsByResumeID(resume.ID)
+	keywords := h.resumeService.GetKeywordsByResumeID(resume.ID)
 
-	var response GetResumeResponse
-	response.from(*resume, keywords)
+	var response dto.GetResumeResponse
+	response.From(*resume, keywords)
 	c.JSON(http.StatusOK, response)
 }
 
-func GetWantedResume(c *gin.Context) {
+func (h *ResumeHandler) GetWantedResume(c *gin.Context) {
 	var token string
 	var err error
 	var userID string
 
-	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -130,7 +136,7 @@ func GetWantedResume(c *gin.Context) {
 		return
 	}
 
-	if userID, err = users.GetUserIDFromToken(token); err != nil {
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -138,7 +144,7 @@ func GetWantedResume(c *gin.Context) {
 		return
 	}
 
-	resume, err := GetResumeByUserID(userID)
+	resume, err := h.resumeService.GetResumeByUserID(userID)
 
 	if err != nil {
 		response := &common.CommonErrorResponse{
@@ -148,21 +154,21 @@ func GetWantedResume(c *gin.Context) {
 		return
 	}
 
-	keywords := GetKeywordsByResumeID(resume.ID)
+	keywords := h.resumeService.GetKeywordsByResumeID(resume.ID)
 
-	wantedResume := ConvertResumeToWanted(*resume, keywords)
+	wantedResume := h.resumeService.ConvertResumeToWanted(*resume, keywords)
 
-	var response GetWantedResumeResponse
-	response.from(wantedResume)
+	var response dto.GetWantedResumeResponse
+	response.From(wantedResume)
 	c.JSON(http.StatusOK, response)
 }
 
-func GetProgrammersResume(c *gin.Context) {
+func (h *ResumeHandler) GetProgrammersResume(c *gin.Context) {
 	var token string
 	var err error
 	var userID string
 
-	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -170,7 +176,7 @@ func GetProgrammersResume(c *gin.Context) {
 		return
 	}
 
-	if userID, err = users.GetUserIDFromToken(token); err != nil {
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -178,7 +184,7 @@ func GetProgrammersResume(c *gin.Context) {
 		return
 	}
 
-	resume, err := GetResumeByUserID(userID)
+	resume, err := h.resumeService.GetResumeByUserID(userID)
 
 	if err != nil {
 		response := &common.CommonErrorResponse{
@@ -188,19 +194,19 @@ func GetProgrammersResume(c *gin.Context) {
 		return
 	}
 
-	programmersResume := ConvertResumeToProgrammers(*resume)
+	programmersResume := h.resumeService.ConvertResumeToProgrammers(*resume)
 
-	var response GetProgrammersResumeResponse
-	response.from(programmersResume)
+	var response dto.GetProgrammersResumeResponse
+	response.From(programmersResume)
 	c.JSON(http.StatusOK, response)
 }
 
-func GetLinkedinResume(c *gin.Context) {
+func (h *ResumeHandler) GetLinkedinResume(c *gin.Context) {
 	var token string
 	var err error
 	var userID string
 
-	if token, err = users.ExtractToken(c.GetHeader("Authorization")); err != nil {
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -208,7 +214,7 @@ func GetLinkedinResume(c *gin.Context) {
 		return
 	}
 
-	if userID, err = users.GetUserIDFromToken(token); err != nil {
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
 		response := &common.CommonErrorResponse{
 			Message: "failed to authorization.",
 		}
@@ -216,7 +222,7 @@ func GetLinkedinResume(c *gin.Context) {
 		return
 	}
 
-	resume, err := GetResumeByUserID(userID)
+	resume, err := h.resumeService.GetResumeByUserID(userID)
 
 	if err != nil {
 		response := &common.CommonErrorResponse{
@@ -226,11 +232,11 @@ func GetLinkedinResume(c *gin.Context) {
 		return
 	}
 
-	keywords := GetKeywordsByResumeID(resume.ID)
+	keywords := h.resumeService.GetKeywordsByResumeID(resume.ID)
 
-	linkedinResume := ConvertResumeToLinkedin(*resume, keywords)
+	linkedinResume := h.resumeService.ConvertResumeToLinkedin(*resume, keywords)
 
-	var response GetLinkedinResumeResponse
-	response.from(linkedinResume)
+	var response dto.GetLinkedinResumeResponse
+	response.From(linkedinResume)
 	c.JSON(http.StatusOK, response)
 }
