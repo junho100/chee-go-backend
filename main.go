@@ -4,6 +4,7 @@ import (
 	"chee-go-backend/internal/config"
 	"chee-go-backend/internal/http"
 	"chee-go-backend/internal/http/handler"
+	"chee-go-backend/internal/infrastructure/youtube"
 	"chee-go-backend/internal/repository"
 	"chee-go-backend/internal/service"
 )
@@ -20,7 +21,9 @@ func main() {
 	resumeService := service.NewResumeService(resumeRepository)
 	userService := service.NewUserService(userRepository)
 
-	handler.NewLectureHandler(router, lectureService)
+	youtubeClient := youtube.NewYoutubeClient(config.YoutubeService)
+
+	handler.NewLectureHandler(router, lectureService, youtubeClient)
 	handler.NewResumeHandler(router, resumeService, userService)
 	handler.NewUserHandler(router, userService)
 	handler.NewHealthCheck(router)
