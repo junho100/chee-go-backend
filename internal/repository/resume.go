@@ -5,6 +5,7 @@ import (
 	"chee-go-backend/internal/domain/repository"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type resumeRepository struct {
@@ -142,7 +143,8 @@ func (r *resumeRepository) FindKeywordByName(keywordName string, keyword *entity
 func (r *resumeRepository) FindResumeByUserId(userId string) (*entity.Resume, error) {
 	var resume entity.Resume
 
-	if err := r.db.Where(&entity.Resume{
+	if err := r.db.Preload("WorkExperiences.WorkExperienceDetails").
+		Preload(clause.Associations).Where(&entity.Resume{
 		UserID: userId,
 	}).First(&resume).Error; err != nil {
 		return nil, err

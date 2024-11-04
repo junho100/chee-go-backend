@@ -186,7 +186,7 @@ func (r *resumeService) ConvertResumeToWanted(resume entity.Resume, keywords []s
 }
 
 func (s *resumeService) CreateResume(createResumeDto *dto.CreateResumeDTO) (uint, error) {
-	var resume *entity.Resume
+	resume := &entity.Resume{}
 	var err error
 
 	tx, err := s.resumeRepository.StartTransaction()
@@ -370,7 +370,7 @@ func (s *resumeService) CreateResume(createResumeDto *dto.CreateResumeDTO) (uint
 		return 0, err
 	}
 	for _, keywordName := range createResumeDto.Keywords {
-		var savedKeyword *entity.Keyword
+		savedKeyword := &entity.Keyword{}
 		if err := s.resumeRepository.FindKeywordByName(keywordName, savedKeyword); err != nil {
 			if err := s.resumeRepository.CreateKeyword(tx, savedKeyword); err != nil {
 				tx.Rollback()
