@@ -55,7 +55,7 @@ func NewDB() (*gorm.DB, func()) {
 		// 각 테이블의 데이터 삭제
 		for _, table := range tables {
 			if err := db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(table).Error; err != nil {
-				fmt.Errorf("Error cleaning up table: %v", err)
+				log.Fatalf("Error cleaning up table: %v", err)
 			}
 		}
 
