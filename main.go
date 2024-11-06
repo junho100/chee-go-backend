@@ -2,8 +2,8 @@ package main
 
 import (
 	"chee-go-backend/internal/config"
-	"chee-go-backend/internal/http"
 	"chee-go-backend/internal/http/handler"
+	"chee-go-backend/internal/http/router"
 	"chee-go-backend/internal/infrastructure/youtube"
 	"chee-go-backend/internal/repository"
 	"chee-go-backend/internal/service"
@@ -11,7 +11,7 @@ import (
 
 func main() {
 	config := config.NewConfig()
-	router := http.NewRouter()
+	router := router.NewRouter()
 
 	lectureRepository := repository.NewLectureRepository(config.DB)
 	resumeRepository := repository.NewResumeRepository(config.DB)
