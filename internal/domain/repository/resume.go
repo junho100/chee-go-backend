@@ -24,4 +24,6 @@ type ResumeRepository interface {
 	CreateKeyword(tx *gorm.DB, keyword *entity.Keyword) error
 	CreateKeywordResume(tx *gorm.DB, keywordResume *entity.KeywordResume) error
 	FindKeywordsByResumeId(resumeId uint) ([]entity.Keyword, error)
+	CreateCertificate(tx *gorm.DB, certificate *entity.Certificate) error
+	DeleteCertificatesInResume(tx *gorm.DB, resume *entity.Resume) error
 }

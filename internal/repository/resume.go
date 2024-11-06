@@ -76,6 +76,14 @@ func (r *resumeRepository) CreateWorkExperienceDetail(tx *gorm.DB, workExperienc
 	return nil
 }
 
+func (r *resumeRepository) CreateCertificate(tx *gorm.DB, certificate *entity.Certificate) error {
+	if err := tx.Save(certificate).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *resumeRepository) DeleteActivitiesInResume(tx *gorm.DB, resume *entity.Resume) error {
 	if err := tx.Where(&entity.Activity{
 		ResumeID: resume.ID,
@@ -90,6 +98,17 @@ func (r *resumeRepository) DeleteEducationsInResume(tx *gorm.DB, resume *entity.
 	if err := tx.Where(&entity.Education{
 		ResumeID: resume.ID,
 	}).Delete(&entity.Education{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *resumeRepository) DeleteCertificatesInResume(tx *gorm.DB, resume *entity.Resume) error {
+	if err := tx.Where(&entity.Certificate{
+		ResumeID: resume.ID,
+	}).Delete(&entity.Certificate{}).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

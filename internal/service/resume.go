@@ -280,6 +280,29 @@ func (s *resumeService) CreateResume(createResumeDto *dto.CreateResumeDTO) (uint
 		}
 	}
 
+	if err := s.resumeRepository.DeleteCertificatesInResume(tx, resume); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	for _, certificate := range createResumeDto.Certificates {
+		savedCertificate := &entity.Certificate{
+			Name:     certificate.Name,
+			IssuedBy: certificate.IssuedBy,
+			ResumeID: resume.ID,
+		}
+
+		if certificate.IssuedDate.IsZero() {
+			savedCertificate.IssuedDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		} else {
+			savedCertificate.IssuedDate = certificate.IssuedDate
+		}
+
+		if err := s.resumeRepository.CreateCertificate(tx, savedCertificate); err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
 	if err := s.resumeRepository.DeleteActivitiesInResume(tx, resume); err != nil {
 		tx.Rollback()
 		return 0, err
