@@ -45,7 +45,7 @@ func (h *UserHandler) SignUp(c *gin.Context) {
 		response := &common.CommonErrorResponse{
 			Message: "failed to create user.",
 		}
-		c.JSON(http.StatusInternalServerError, response)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
