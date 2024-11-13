@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"bytes"
+	"chee-go-backend/internal/common"
 	"chee-go-backend/internal/http/dto"
 	"chee-go-backend/internal/http/handler"
 	"chee-go-backend/internal/http/router"
@@ -49,6 +50,34 @@ func TestUserAPI(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
 		assert.Equal(t, signUpRequest.ID, response.ID)
+	})
+
+	t.Run("이미 존재하는 사용자 회원가입 시도", func(t *testing.T) {
+		userID := util.RandomString(10)
+		signUpRequest := dto.SignUpRequest{
+			ID:       userID,
+			Email:    util.RandomString(8) + "@test.com",
+			Password: "password123!",
+		}
+		jsonData, _ := json.Marshal(signUpRequest)
+
+		// 사용자 생성
+		req := httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		req = httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w = httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		// Then
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+		var response common.CommonErrorResponse
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
 	})
 
 	t.Run("ID 중복 체크", func(t *testing.T) {
@@ -118,6 +147,43 @@ func TestUserAPI(t *testing.T) {
 		assert.NotEmpty(t, loginResponse.Token)
 	})
 
+	t.Run("로그인 실패", func(t *testing.T) {
+		// Given
+		userID := util.RandomString(10)
+		password := "password123!"
+		wrongPassword := "wrongpassword123!"
+
+		// 사용자 생성
+		signUpRequest := dto.SignUpRequest{
+			ID:       userID,
+			Email:    util.RandomString(8) + "@test.com",
+			Password: password,
+		}
+		jsonData, _ := json.Marshal(signUpRequest)
+		req := httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		// When: 로그인 요청
+		loginRequest := dto.LoginRequest{
+			ID:       userID,
+			Password: wrongPassword,
+		}
+		jsonData, _ = json.Marshal(loginRequest)
+		req = httptest.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w = httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		// Then
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+		var loginResponse common.CommonErrorResponse
+		err := json.Unmarshal(w.Body.Bytes(), &loginResponse)
+		assert.NoError(t, err)
+	})
+
 	t.Run("토큰 검증", func(t *testing.T) {
 		// Given
 		userID := util.RandomString(10)
@@ -163,5 +229,23 @@ func TestUserAPI(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &checkMeResponse)
 		assert.NoError(t, err)
 		assert.Equal(t, userID, checkMeResponse.UserID)
+	})
+
+	t.Run("유효하지 않은 토큰 검증", func(t *testing.T) {
+		checkMeRequest := dto.CheckMeRequest{
+			Token: "INVALID TOKEN",
+		}
+		jsonData, _ := json.Marshal(checkMeRequest)
+		req := httptest.NewRequest("POST", "/api/users/me", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		// Then
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+		var checkMeResponse common.CommonErrorResponse
+		err := json.Unmarshal(w.Body.Bytes(), &checkMeResponse)
+		assert.NoError(t, err)
 	})
 }
