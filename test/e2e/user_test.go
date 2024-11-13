@@ -231,7 +231,7 @@ func TestUserAPI(t *testing.T) {
 		assert.Equal(t, userID, checkMeResponse.UserID)
 	})
 
-	t.Run("토큰 검증", func(t *testing.T) {
+	t.Run("유효하지 않은 토큰 검증", func(t *testing.T) {
 		checkMeRequest := dto.CheckMeRequest{
 			Token: "INVALID TOKEN",
 		}
