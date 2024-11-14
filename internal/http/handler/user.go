@@ -83,7 +83,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 		response := &common.CommonErrorResponse{
 			Message: "login failed.",
 		}
-		c.JSON(http.StatusForbidden, response)
+		c.JSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 		response := &common.CommonErrorResponse{
 			Message: "login failed.",
 		}
-		c.JSON(http.StatusForbidden, response)
+		c.JSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 		response := &common.CommonErrorResponse{
 			Message: "login failed.",
 		}
-		c.JSON(http.StatusForbidden, response)
+		c.JSON(http.StatusUnauthorized, response)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (h *UserHandler) CheckMe(c *gin.Context) {
 		response := &common.CommonErrorResponse{
 			Message: "invalid token.",
 		}
-		c.JSON(http.StatusForbidden, response)
+		c.JSON(http.StatusUnauthorized, response)
 		return
 	}
 
