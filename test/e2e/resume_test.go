@@ -162,6 +162,45 @@ func TestResumeAPI(t *testing.T) {
 		assert.Len(t, response.Keywords, 3)
 	})
 
+	t.Run("이력서 없는 사용자 조회 실패", func(t *testing.T) {
+		// When
+		// 테스트용 사용자 생성 및 토큰 발급
+		userID := util.RandomString(10)
+		password := "password123!"
+		signUpRequest := dto.SignUpRequest{
+			ID:       userID,
+			Email:    util.RandomString(8) + "@test.com",
+			Password: password,
+		}
+		jsonData, _ := json.Marshal(signUpRequest)
+		req := httptest.NewRequest("POST", "/api/users", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		loginRequest := dto.LoginRequest{
+			ID:       userID,
+			Password: password,
+		}
+		jsonData, _ = json.Marshal(loginRequest)
+		req = httptest.NewRequest("POST", "/api/users/login", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w = httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		var loginResponse dto.LoginResponse
+		json.Unmarshal(w.Body.Bytes(), &loginResponse)
+		newUserToken := loginResponse.Token
+
+		req = httptest.NewRequest("GET", "/api/resumes", nil)
+		req.Header.Set("Authorization", "Bearer "+newUserToken)
+		w = httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		// Then
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
 	t.Run("원티드 이력서 변환 조회 성공", func(t *testing.T) {
 		// When
 		req := httptest.NewRequest("GET", "/api/resumes/wanted", nil)
