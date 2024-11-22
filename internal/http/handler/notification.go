@@ -145,7 +145,7 @@ func (h *NotificationHandler) GetNotificationConfig(c *gin.Context) {
 	}
 	keywords := h.notificationService.GetKeywordsByNotificationID(notificationConfig.ID)
 
-	getNotificationConfigResponse := dto.GetNotificationConfig{
+	getNotificationConfigResponse := dto.GetNotificationConfigResponse{
 		Token:    notificationConfig.TelegramToken,
 		ChatID:   notificationConfig.TelegramChatID,
 		Keywords: keywords,

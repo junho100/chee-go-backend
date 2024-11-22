@@ -34,8 +34,8 @@ type CreateNotificationConfigResponse struct {
 	ConfigID uint `json:"config_id"`
 }
 
-type GetNotificationConfig struct {
-	Token    string
-	ChatID   string
-	Keywords []string
+type GetNotificationConfigResponse struct {
+	Token    string   `json:"token"`
+	ChatID   string   `json:"chat_id"`
+	Keywords []string `json:"keywords"`
 }
