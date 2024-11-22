@@ -26,6 +26,7 @@ func NewNotificationHandler(router *gin.Engine, telegramClient telegram.Telegram
 	router.POST("/api/notifications/validate-token", handler.ValidateToken)
 	router.POST("/api/notifications/validate-chat-id", handler.ValidateChatID)
 	router.POST("/api/notifications/config", handler.CreateNotificationConfig)
+	router.GET("/api/notifications/config", handler.GetNotificationConfig)
 }
 
 func (h *NotificationHandler) ValidateToken(c *gin.Context) {
@@ -111,4 +112,43 @@ func (h *NotificationHandler) CreateNotificationConfig(c *gin.Context) {
 		ConfigID: configID,
 	}
 	c.JSON(http.StatusCreated, createNotificationConfigResponse)
+}
+
+func (h *NotificationHandler) GetNotificationConfig(c *gin.Context) {
+	var token string
+	var err error
+	var userID string
+
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	notificationConfig, err := h.notificationService.GetNotificationConfigByUserID(userID)
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "no config.",
+		}
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+	keywords := h.notificationService.GetKeywordsByNotificationID(notificationConfig.ID)
+
+	getNotificationConfigResponse := dto.GetNotificationConfig{
+		Token:    notificationConfig.TelegramToken,
+		ChatID:   notificationConfig.TelegramChatID,
+		Keywords: keywords,
+	}
+	c.JSON(http.StatusOK, getNotificationConfigResponse)
 }

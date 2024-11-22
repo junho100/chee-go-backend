@@ -56,3 +56,24 @@ func (s *notificationService) CreateNotificationConfig(createNotificationDto dto
 
 	return notificationConfig.ID, tx.Commit().Error
 }
+
+func (s *notificationService) GetNotificationConfigByUserID(userID string) (*entity.NotificationConfig, error) {
+	notificationConfig := entity.NotificationConfig{}
+
+	if err := s.notificationRepository.FindNotificationConfigByUserID(&notificationConfig, userID); err != nil {
+		return nil, err
+	}
+
+	return &notificationConfig, nil
+}
+
+func (s *notificationService) GetKeywordsByNotificationID(notificationConfigID uint) []string {
+	notificationKeywords := s.notificationRepository.FindKeywordsByNotificationID(notificationConfigID)
+
+	keywords := make([]string, len(notificationKeywords))
+	for i, v := range notificationKeywords {
+		keywords[i] = v.Name
+	}
+
+	return keywords
+}

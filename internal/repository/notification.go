@@ -89,6 +89,23 @@ func (r *notificationRepository) CreateKeywordByNotificationConfigID(tx *gorm.DB
 	return nil
 }
 
+func (r *notificationRepository) FindKeywordsByNotificationID(notificationConfigID uint) []entity.NotificationKeyword {
+	var notificationConfigKeywords []entity.NotificationConfigKeyword
+
+	if err := r.db.Preload("NotificationKeyword").Where(&entity.NotificationConfigKeyword{
+		NotificationConfigID: notificationConfigID,
+	}).Find(&notificationConfigKeywords).Error; err != nil {
+		return make([]entity.NotificationKeyword, 0)
+	}
+
+	keywords := make([]entity.NotificationKeyword, len(notificationConfigKeywords))
+	for i, v := range notificationConfigKeywords {
+		keywords[i] = v.NotificationKeyword
+	}
+
+	return keywords
+}
+
 func NewNotificationRepository(db *gorm.DB) repository.NotificationRepository {
 	return &notificationRepository{
 		db: db,
