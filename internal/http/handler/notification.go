@@ -2,6 +2,7 @@ package handler
 
 import (
 	"chee-go-backend/internal/common"
+	"chee-go-backend/internal/domain/service"
 	"chee-go-backend/internal/http/dto"
 	"chee-go-backend/internal/infrastructure/telegram"
 	"net/http"
@@ -10,16 +11,21 @@ import (
 )
 
 type NotificationHandler struct {
-	telegramClient telegram.TelegramClient
+	telegramClient      telegram.TelegramClient
+	userService         service.UserService
+	notificationService service.NotificationService
 }
 
-func NewNotificationHandler(router *gin.Engine, telegramClient telegram.TelegramClient) {
+func NewNotificationHandler(router *gin.Engine, telegramClient telegram.TelegramClient, userService service.UserService, notificationService service.NotificationService) {
 	handler := &NotificationHandler{
-		telegramClient: telegramClient,
+		telegramClient:      telegramClient,
+		userService:         userService,
+		notificationService: notificationService,
 	}
 
 	router.POST("/api/notifications/validate-token", handler.ValidateToken)
 	router.POST("/api/notifications/validate-chat-id", handler.ValidateChatID)
+	router.POST("/api/notifications/config", handler.CreateNotificationConfig)
 }
 
 func (h *NotificationHandler) ValidateToken(c *gin.Context) {
@@ -54,4 +60,55 @@ func (h *NotificationHandler) ValidateChatID(c *gin.Context) {
 		IsValid: h.telegramClient.ValidateChatID(validateChatIDRequest.Token, validateChatIDRequest.ChatID),
 	}
 	c.JSON(http.StatusCreated, validateChatIDResponse)
+}
+
+func (h *NotificationHandler) CreateNotificationConfig(c *gin.Context) {
+	var createNotificationConfigRequest dto.CreateNotificationConfigRequest
+	var token string
+	var err error
+	var userID string
+	var configID uint
+
+	if err := c.BindJSON(&createNotificationConfigRequest); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "bad content.",
+		}
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	if token, err = h.userService.ExtractToken(c.GetHeader("Authorization")); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	if userID, err = h.userService.GetUserIDFromToken(token); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to authorization.",
+		}
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	createNotificationDto := dto.CreateNotificationConfigDto{
+		UserID:   userID,
+		Token:    createNotificationConfigRequest.Token,
+		ChatID:   createNotificationConfigRequest.ChatID,
+		Keywords: createNotificationConfigRequest.Keywords,
+	}
+	if configID, err = h.notificationService.CreateNotificationConfig(createNotificationDto); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "failed to create config.",
+		}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	createNotificationConfigResponse := dto.CreateNotificationConfigResponse{
+		ConfigID: configID,
+	}
+	c.JSON(http.StatusCreated, createNotificationConfigResponse)
 }

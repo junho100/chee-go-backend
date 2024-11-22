@@ -18,10 +18,12 @@ func main() {
 	lectureRepository := repository.NewLectureRepository(config.DB)
 	resumeRepository := repository.NewResumeRepository(config.DB)
 	userRepository := repository.NewUserRepository(config.DB)
+	notificationRepository := repository.NewNotificationRepository(config.DB)
 
 	lectureService := service.NewLectureService(lectureRepository)
 	resumeService := service.NewResumeService(resumeRepository)
 	userService := service.NewUserService(userRepository)
+	notificationService := service.NewNotificationService(notificationRepository)
 
 	youtubeClient := youtube.NewYoutubeClient(config.YoutubeService)
 	telegramClient := telegram.NewTelegramClient()
@@ -30,7 +32,7 @@ func main() {
 	handler.NewResumeHandler(router, resumeService, userService)
 	handler.NewUserHandler(router, userService)
 	handler.NewHealthCheck(router)
-	handler.NewNotificationHandler(router, telegramClient)
+	handler.NewNotificationHandler(router, telegramClient, userService, notificationService)
 
 	// Cron job 시작
 	cronJob := cron.NewCronJob()
