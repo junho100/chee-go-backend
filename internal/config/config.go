@@ -51,6 +51,10 @@ func NewConfig() *Config {
 		&entity.WorkExperienceDetail{},
 		&entity.Subject{},
 		&entity.Lecture{},
+		&entity.NotificationConfig{},
+		&entity.NotificationKeyword{},
+		&entity.NotificationConfigKeyword{},
+		&entity.SchoolNotification{},
 	)
 
 	ctx := context.Background()
