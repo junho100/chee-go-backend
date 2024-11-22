@@ -19,6 +19,7 @@ func NewNotificationHandler(router *gin.Engine, telegramClient telegram.Telegram
 	}
 
 	router.POST("/api/notifications/validate-token", handler.ValidateToken)
+	router.POST("/api/notifications/validate-chat-id", handler.ValidateChatID)
 }
 
 func (h *NotificationHandler) ValidateToken(c *gin.Context) {
@@ -36,4 +37,21 @@ func (h *NotificationHandler) ValidateToken(c *gin.Context) {
 		IsValid: h.telegramClient.ValidateToken(validateTokenRequest.Token),
 	}
 	c.JSON(http.StatusCreated, validateTokenResponse)
+}
+
+func (h *NotificationHandler) ValidateChatID(c *gin.Context) {
+	var validateChatIDRequest dto.ValidateChatIDRequest
+
+	if err := c.BindJSON(&validateChatIDRequest); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "bad content.",
+		}
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	validateChatIDResponse := dto.ValidateChatIDResponse{
+		IsValid: h.telegramClient.ValidateChatID(validateChatIDRequest.Token, validateChatIDRequest.ChatID),
+	}
+	c.JSON(http.StatusCreated, validateChatIDResponse)
 }
