@@ -5,6 +5,7 @@ import (
 	"chee-go-backend/internal/http/handler"
 	"chee-go-backend/internal/http/router"
 	"chee-go-backend/internal/infrastructure/cron"
+	"chee-go-backend/internal/infrastructure/telegram"
 	"chee-go-backend/internal/infrastructure/youtube"
 	"chee-go-backend/internal/repository"
 	"chee-go-backend/internal/service"
@@ -23,11 +24,13 @@ func main() {
 	userService := service.NewUserService(userRepository)
 
 	youtubeClient := youtube.NewYoutubeClient(config.YoutubeService)
+	telegramClient := telegram.NewTelegramClient()
 
 	handler.NewLectureHandler(router, lectureService, youtubeClient)
 	handler.NewResumeHandler(router, resumeService, userService)
 	handler.NewUserHandler(router, userService)
 	handler.NewHealthCheck(router)
+	handler.NewNotificationHandler(router, telegramClient)
 
 	// Cron job 시작
 	cronJob := cron.NewCronJob()
