@@ -26,12 +26,8 @@ type CronJob struct {
 }
 
 func NewCronJob(notificationService service.NotificationService, telegramClient telegram.TelegramClient, notificationStatus redis.NotificationStatus, crawler crawler.Crawler) *CronJob {
-	// CRON_TZ=Asia/Seoul 설정으로 한국 시간 기준으로 동작하도록 설정
-	loc, err := time.LoadLocation("Asia/Seoul")
-	if err != nil {
-		log.Printf("Failed to load location: %v", err)
-		return nil
-	}
+	// UTC+9 시간으로 고정 설정
+	loc := time.FixedZone("KST", 9*60*60) // UTC+9 시간
 
 	c := cron.New(cron.WithLocation(loc))
 	return &CronJob{
@@ -44,8 +40,8 @@ func NewCronJob(notificationService service.NotificationService, telegramClient 
 }
 
 func (c *CronJob) Start() {
-	// 매일 오후 12시에 실행 (한국 시간)
-	c.cron.AddFunc("0 0 15 * * *", func() {
+	// 매일 오전 12시 30분에 실행 (한국 시간)
+	c.cron.AddFunc("0 30 0 * * *", func() {
 		// 1. 오늘 올라온 모든 공지사항 크롤링 및 DB 저장
 		deptNotices, err := c.crawler.FetchDepartmentNotices()
 		if err != nil {
