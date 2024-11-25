@@ -11,6 +11,14 @@ type notificationRepository struct {
 	db *gorm.DB
 }
 
+func (r *notificationRepository) FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error {
+	if err := r.db.Find(configs).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // CreateNotificationConfig implements repository.NotificationRepository.
 func (r *notificationRepository) CreateNotificationConfig(tx *gorm.DB, notificationConfig *entity.NotificationConfig) error {
 	if err := tx.Save(notificationConfig).Error; err != nil {
@@ -104,6 +112,52 @@ func (r *notificationRepository) FindKeywordsByNotificationID(notificationConfig
 	}
 
 	return keywords
+}
+
+func (r *notificationRepository) SaveNotifications(notifications []entity.SchoolNotification) error {
+	if len(notifications) == 0 {
+		return nil
+	}
+
+	// 중복 체크를 위한 기존 ID 조회
+	var existingIDs []string
+	for _, notice := range notifications {
+		var exists bool
+		err := r.db.Model(&entity.SchoolNotification{}).
+			Select("count(*) > 0").
+			Where("id = ?", notice.ID).
+			Find(&exists).Error
+		if err != nil {
+			return err
+		}
+		if exists {
+			existingIDs = append(existingIDs, notice.ID)
+		}
+	}
+
+	// 중복되지 않은 공지사항만 필터링
+	var newNotifications []entity.SchoolNotification
+	for _, notice := range notifications {
+		if !contains(existingIDs, notice.ID) {
+			newNotifications = append(newNotifications, notice)
+		}
+	}
+
+	if len(newNotifications) == 0 {
+		return nil
+	}
+
+	return r.db.Create(&newNotifications).Error
+}
+
+// 문자열 슬라이스에 특정 값이 포함되어 있는지 확인하는 헬퍼 함수
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func NewNotificationRepository(db *gorm.DB) repository.NotificationRepository {

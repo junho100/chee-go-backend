@@ -1,20 +1,77 @@
 package telegram
 
 import (
+	"chee-go-backend/internal/http/dto"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
 type TelegramClient interface {
 	ValidateToken(token string) bool
 	ValidateChatID(token string, chatID string) bool
+	SendMessage(token string, chatID string, message string) error
+	SendNotificationMessage(sendNotificationMessageDto dto.SendNotificationMessageDto) error
 }
 
 type telegramClient struct {
 	ApiUrl string
+}
+
+func (c *telegramClient) SendMessage(token string, chatID string, message string) error {
+	client := &http.Client{Timeout: 10 * time.Second}
+	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%s&text=%s", c.ApiUrl, token, chatID, message)
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var msgResp messageResponse
+	if err := json.Unmarshal(body, &msgResp); err != nil {
+		return err
+	}
+
+	if !msgResp.Ok {
+		return err
+	}
+
+	return nil
+}
+
+func (c *telegramClient) SendNotificationMessage(sendNotificationMessageDto dto.SendNotificationMessageDto) error {
+	// 메시지 텍스트 생성
+	messageText := fmt.Sprintf("공지사항\n제목: %s\n링크: %s\n작성일: %s",
+		sendNotificationMessageDto.Title,
+		sendNotificationMessageDto.Url,
+		sendNotificationMessageDto.Date.Format("2006-01-02"))
+
+	// URL 인코딩
+	encodedText := url.QueryEscape(messageText)
+
+	// SendMessage 호출
+	if err := c.SendMessage(
+		sendNotificationMessageDto.Token,
+		sendNotificationMessageDto.ChatID,
+		encodedText,
+	); err != nil {
+		return fmt.Errorf("텔레그램 메시지 전송 실패: %v", err)
+	}
+
+	return nil
 }
 
 func NewTelegramClient() TelegramClient {

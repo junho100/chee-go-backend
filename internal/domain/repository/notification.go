@@ -13,4 +13,6 @@ type NotificationRepository interface {
 	UpdateNotificationConfig(tx *gorm.DB, notificationConfig *entity.NotificationConfig) error
 	CreateKeywordByNotificationConfigID(tx *gorm.DB, notificationConfigID uint, keywords []string) error
 	FindKeywordsByNotificationID(notificationConfigID uint) []entity.NotificationKeyword
+	FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error
+	SaveNotifications(notifications []entity.SchoolNotification) error
 }

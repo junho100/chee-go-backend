@@ -23,9 +23,9 @@ type NotificationConfigKeyword struct {
 }
 
 type SchoolNotification struct {
-	ID      uint `gorm:"primary_key"`
+	ID      string `gorm:"primary_key"`
 	Title   string
 	Date    time.Time `gorm:"column:date;type:date"`
-	Content string    `gorm:"column:date;type:text"`
+	Content string    `gorm:"column:content;type:text"`
 	Url     string
 }

@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type ValidateTokenRequest struct {
 	Token string `json:"token"`
 }
@@ -38,4 +40,20 @@ type GetNotificationConfigResponse struct {
 	Token    string   `json:"token"`
 	ChatID   string   `json:"chat_id"`
 	Keywords []string `json:"keywords"`
+}
+
+type SendNotificationMessageDto struct {
+	Title  string
+	Date   time.Time
+	Url    string
+	Token  string
+	ChatID string
+}
+
+type FetchSchoolNoticeDto struct {
+	ID       string    `json:"id"`
+	Title    string    `json:"title"`
+	URL      string    `json:"url"`
+	PostDate time.Time `json:"post_date"`
+	Content  string    `json:"content"`
 }

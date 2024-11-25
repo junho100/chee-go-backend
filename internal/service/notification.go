@@ -5,15 +5,38 @@ import (
 	"chee-go-backend/internal/domain/repository"
 	"chee-go-backend/internal/domain/service"
 	"chee-go-backend/internal/http/dto"
+	"chee-go-backend/internal/infrastructure/crawler"
 )
 
 type notificationService struct {
 	notificationRepository repository.NotificationRepository
+	crawler                crawler.Crawler
 }
 
-func NewNotificationService(notificationRepository repository.NotificationRepository) service.NotificationService {
+// FindAllNotificationConfigs implements service.NotificationService.
+func (s *notificationService) FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error {
+	if err := s.notificationRepository.FindAllNotificationConfigs(configs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *notificationService) FindKeywordsByConfigID(configID uint) []string {
+	notificationKeywords := s.notificationRepository.FindKeywordsByNotificationID(configID)
+	keywords := make([]string, len(notificationKeywords))
+
+	for i, v := range notificationKeywords {
+		keywords[i] = v.Name
+	}
+
+	return keywords
+}
+
+func NewNotificationService(notificationRepository repository.NotificationRepository, crawler crawler.Crawler) service.NotificationService {
 	return &notificationService{
 		notificationRepository: notificationRepository,
+		crawler:                crawler,
 	}
 }
 
@@ -76,4 +99,8 @@ func (s *notificationService) GetKeywordsByNotificationID(notificationConfigID u
 	}
 
 	return keywords
+}
+
+func (s *notificationService) SaveTodayNotifications(notifications []entity.SchoolNotification) error {
+	return s.notificationRepository.SaveNotifications(notifications)
 }

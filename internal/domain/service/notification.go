@@ -9,4 +9,7 @@ type NotificationService interface {
 	CreateNotificationConfig(createNotificationDto dto.CreateNotificationConfigDto) (uint, error)
 	GetNotificationConfigByUserID(userID string) (*entity.NotificationConfig, error)
 	GetKeywordsByNotificationID(notificationConfigID uint) []string
+	FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error
+	FindKeywordsByConfigID(configID uint) []string
+	SaveTodayNotifications(notifications []entity.SchoolNotification) error
 }
