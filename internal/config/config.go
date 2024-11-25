@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
@@ -15,8 +16,13 @@ import (
 )
 
 type Config struct {
-	DB             *gorm.DB
-	YoutubeService *youtube.Service
+	DB                 *gorm.DB
+	YoutubeService     *youtube.Service
+	RedisClient        *redis.Client
+	DeptGeneralURL     string
+	DeptScholarshipURL string
+	SchoolNoticeURL    string   // 학교 공지사항 URL
+	DeptNoticeURLs     []string // 학과 공지사항 URL들
 }
 
 func NewConfig() *Config {
@@ -51,6 +57,10 @@ func NewConfig() *Config {
 		&entity.WorkExperienceDetail{},
 		&entity.Subject{},
 		&entity.Lecture{},
+		&entity.NotificationConfig{},
+		&entity.NotificationKeyword{},
+		&entity.NotificationConfigKeyword{},
+		&entity.SchoolNotification{},
 	)
 
 	ctx := context.Background()
@@ -62,8 +72,22 @@ func NewConfig() *Config {
 		log.Fatalf("Error creating YouTube client: %v", err)
 	}
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: os.Getenv("REDIS_ADDR"),
+		DB:   0,
+	})
+
 	return &Config{
-		DB:             db,
-		YoutubeService: service,
+		DB:                 db,
+		YoutubeService:     service,
+		RedisClient:        redisClient,
+		DeptGeneralURL:     os.Getenv("DEPT_GENERAL_URL"),
+		DeptScholarshipURL: os.Getenv("DEPT_SCHOLARSHIP_URL"),
+		SchoolNoticeURL:    os.Getenv("SCHOOL_NOTICE_URL"),
+		DeptNoticeURLs: []string{
+			os.Getenv("DEPT_NOTICE_URL_1"),
+			os.Getenv("DEPT_NOTICE_URL_2"),
+			os.Getenv("DEPT_NOTICE_URL_3"),
+		},
 	}
 }

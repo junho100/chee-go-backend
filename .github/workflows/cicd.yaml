@@ -36,6 +36,11 @@ jobs:
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}" >> .env
+          echo "REDIS_ADDR=${{ secrets.REDIS_ADDR }}" >> .env
+          echo "SCHOOL_NOTICE_URL=${{ secrets.SCHOOL_NOTICE_URL }}" >> .env
+          echo "DEPT_NOTICE_URL_1=${{ secrets.DEPT_NOTICE_URL_1 }}" >> .env
+          echo "DEPT_NOTICE_URL_2=${{ secrets.DEPT_NOTICE_URL_2 }}" >> .env
+          echo "DEPT_NOTICE_URL_3=${{ secrets.DEPT_NOTICE_URL_3 }}" >> .env
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
