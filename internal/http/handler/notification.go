@@ -27,6 +27,7 @@ func NewNotificationHandler(router *gin.Engine, telegramClient telegram.Telegram
 	router.POST("/api/notifications/validate-chat-id", handler.ValidateChatID)
 	router.POST("/api/notifications/config", handler.CreateNotificationConfig)
 	router.GET("/api/notifications/config", handler.GetNotificationConfig)
+	router.GET("/api/notifications/:id", handler.GetNotificationByID)
 }
 
 func (h *NotificationHandler) ValidateToken(c *gin.Context) {
@@ -151,4 +152,28 @@ func (h *NotificationHandler) GetNotificationConfig(c *gin.Context) {
 		Keywords: keywords,
 	}
 	c.JSON(http.StatusOK, getNotificationConfigResponse)
+}
+
+func (h *NotificationHandler) GetNotificationByID(c *gin.Context) {
+	notificationID := c.Param("id")
+
+	if notificationID == "" {
+		response := &common.CommonErrorResponse{
+			Message: "bad path variable.",
+		}
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	notification, err := h.notificationService.GetNotificationByID(notificationID)
+	if err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "no notification.",
+		}
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	response := dto.GetNotificationByIDResponse(*notification)
+	c.JSON(http.StatusOK, response)
 }

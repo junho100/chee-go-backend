@@ -15,4 +15,5 @@ type NotificationRepository interface {
 	FindKeywordsByNotificationID(notificationConfigID uint) []entity.NotificationKeyword
 	FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error
 	SaveNotifications(notifications []entity.SchoolNotification) error
+	FindNotificationByID(notification *entity.SchoolNotification, id string) error
 }

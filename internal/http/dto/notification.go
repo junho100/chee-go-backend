@@ -57,3 +57,11 @@ type FetchSchoolNoticeDto struct {
 	PostDate time.Time `json:"post_date"`
 	Content  string    `json:"content"`
 }
+
+type GetNotificationByIDResponse struct {
+	ID      string    `json:"id"`
+	Title   string    `json:"title"`
+	Date    time.Time `json:"date"`
+	Content string    `json:"content"`
+	Url     string    `json:"url"`
+}

@@ -13,6 +13,17 @@ type notificationService struct {
 	crawler                crawler.Crawler
 }
 
+// GetNotificationByID implements service.NotificationService.
+func (s *notificationService) GetNotificationByID(id string) (*entity.SchoolNotification, error) {
+	notification := entity.SchoolNotification{}
+
+	if err := s.notificationRepository.FindNotificationByID(&notification, id); err != nil {
+		return nil, err
+	}
+
+	return &notification, nil
+}
+
 // FindAllNotificationConfigs implements service.NotificationService.
 func (s *notificationService) FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error {
 	if err := s.notificationRepository.FindAllNotificationConfigs(configs); err != nil {

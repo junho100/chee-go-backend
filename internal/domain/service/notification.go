@@ -12,4 +12,5 @@ type NotificationService interface {
 	FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error
 	FindKeywordsByConfigID(configID uint) []string
 	SaveTodayNotifications(notifications []entity.SchoolNotification) error
+	GetNotificationByID(id string) (*entity.SchoolNotification, error)
 }

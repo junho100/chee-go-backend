@@ -11,6 +11,17 @@ type notificationRepository struct {
 	db *gorm.DB
 }
 
+// FindNotificationByID implements repository.NotificationRepository.
+func (r *notificationRepository) FindNotificationByID(notification *entity.SchoolNotification, id string) error {
+	if err := r.db.Where(&entity.SchoolNotification{
+		ID: id,
+	}).First(notification).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *notificationRepository) FindAllNotificationConfigs(configs *[]entity.NotificationConfig) error {
 	if err := r.db.Find(configs).Error; err != nil {
 		return err
