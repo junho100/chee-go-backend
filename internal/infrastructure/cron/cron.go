@@ -40,8 +40,8 @@ func NewCronJob(notificationService service.NotificationService, telegramClient 
 }
 
 func (c *CronJob) Start() {
-	// 매일 오후 3시 45분에 실행
-	c.cron.AddFunc("0 17 * * *", func() {
+	// 매일 오전 11시에 실행 (KST)
+	c.cron.AddFunc("0 11 * * *", func() {
 		// 1. 오늘 올라온 모든 공지사항 크롤링 및 DB 저장
 		deptNotices, err := c.crawler.FetchDepartmentNotices()
 		if err != nil {
@@ -127,7 +127,7 @@ func (c *CronJob) Start() {
 	})
 
 	c.cron.Start()
-	log.Println("Cron job started")
+	log.Println("Cron job started (KST - runs at 11:00 AM)")
 }
 
 func (c *CronJob) Stop() {
