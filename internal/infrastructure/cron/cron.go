@@ -93,6 +93,10 @@ func (c *CronJob) Start() {
 
 			// 매칭된 공지사항이 없으면 다음 사용자로
 			if len(matchedNotices) == 0 {
+				now := time.Now().In(c.cron.Location())
+				checkTime := now.Format("2006-01-02 15:04")
+				message := fmt.Sprintf("[취Go 알림]\n발견된 공지사항이 없습니다.\n확인 시각: %s", checkTime)
+				c.telegramClient.SendMessage(config.TelegramToken, config.TelegramChatID, message)
 				continue
 			}
 
