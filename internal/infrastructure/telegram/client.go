@@ -54,7 +54,7 @@ func (c *telegramClient) SendMessage(token string, chatID string, message string
 
 func (c *telegramClient) SendNotificationMessage(sendNotificationMessageDto dto.SendNotificationMessageDto) error {
 	// 메시지 텍스트 생성
-	messageText := fmt.Sprintf("공지사항\n제목: %s\n링크: %s\n작성일: %s",
+	messageText := fmt.Sprintf("[취Go 알림]\n공지사항\n제목: %s\n링크: %s\n작성일: %s",
 		sendNotificationMessageDto.Title,
 		sendNotificationMessageDto.Url,
 		sendNotificationMessageDto.Date.Format("2006-01-02"))
@@ -100,7 +100,7 @@ func (c *telegramClient) ValidateToken(token string) bool {
 }
 
 func (c *telegramClient) ValidateChatID(token string, chatID string) bool {
-	testMessage := "Chat ID 확인 중..."
+	testMessage := "[취Go 알림]\nChat ID 확인 중..."
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%s&text=%s", c.ApiUrl, token, chatID, testMessage)
