@@ -129,7 +129,6 @@ func (c *crawler) FetchSchoolNotices() ([]entity.SchoolNotification, error) {
 			Content: content,
 		}
 
-		log.Printf("발견된 공지사항: %+v", notice)
 		notices = append(notices, notice)
 	})
 
@@ -242,7 +241,6 @@ func (c *crawler) fetchDeptNoticesFromURL(url string, prefix string) ([]entity.S
 			Content: content,
 		}
 
-		log.Printf("발견된 공지사항: %+v", notice)
 		notices = append(notices, notice)
 	})
 
