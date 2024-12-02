@@ -3,11 +3,12 @@ package entity
 import "time"
 
 type NotificationConfig struct {
-	ID             uint `gorm:"primary_key"`
-	UserID         string
-	User           User
-	TelegramToken  string `gorm:"telegram_token"`
-	TelegramChatID string `gorm:"telegram_chat_id"`
+	ID              uint `gorm:"primary_key"`
+	UserID          string
+	User            User
+	TelegramToken   string `gorm:"telegram_token"`
+	TelegramChatID  string `gorm:"telegram_chat_id"`
+	DiscordClientID string `gorm:"discord_client_id"`
 }
 
 type NotificationKeyword struct {

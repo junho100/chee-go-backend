@@ -65,3 +65,11 @@ type GetNotificationByIDResponse struct {
 	Content string    `json:"content"`
 	Url     string    `json:"url"`
 }
+
+type ValidateDiscordClientIDRequest struct {
+	ClientID string `json:"client_id"`
+}
+
+type ValidateDiscordClientIDResponse struct {
+	IsValid bool `json:"is_valid"`
+}
