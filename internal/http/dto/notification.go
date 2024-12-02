@@ -20,16 +20,18 @@ type ValidateChatIDResponse struct {
 }
 
 type CreateNotificationConfigRequest struct {
-	Token    string   `json:"token"`
-	ChatID   string   `json:"chat_id"`
-	Keywords []string `json:"keywords"`
+	Token           string   `json:"token"`
+	ChatID          string   `json:"chat_id"`
+	Keywords        []string `json:"keywords"`
+	DiscordClientID string   `json:"discord_client_id"`
 }
 
 type CreateNotificationConfigDto struct {
-	UserID   string
-	Token    string
-	ChatID   string
-	Keywords []string
+	UserID          string
+	Token           string
+	ChatID          string
+	Keywords        []string
+	DiscordClientID string
 }
 
 type CreateNotificationConfigResponse struct {

@@ -68,6 +68,7 @@ func (s *notificationService) CreateNotificationConfig(createNotificationDto dto
 		notificationConfig.UserID = createNotificationDto.UserID
 		notificationConfig.TelegramToken = createNotificationDto.Token
 		notificationConfig.TelegramChatID = createNotificationDto.ChatID
+		notificationConfig.DiscordClientID = createNotificationDto.DiscordClientID
 
 		if err := s.notificationRepository.CreateNotificationConfig(tx, &notificationConfig); err != nil {
 			tx.Rollback()
@@ -76,6 +77,7 @@ func (s *notificationService) CreateNotificationConfig(createNotificationDto dto
 	} else {
 		notificationConfig.TelegramToken = createNotificationDto.Token
 		notificationConfig.TelegramChatID = createNotificationDto.ChatID
+		notificationConfig.DiscordClientID = createNotificationDto.DiscordClientID
 
 		if err := s.notificationRepository.UpdateNotificationConfig(tx, &notificationConfig); err != nil {
 			tx.Rollback()

@@ -101,10 +101,11 @@ func (h *NotificationHandler) CreateNotificationConfig(c *gin.Context) {
 	}
 
 	createNotificationDto := dto.CreateNotificationConfigDto{
-		UserID:   userID,
-		Token:    createNotificationConfigRequest.Token,
-		ChatID:   createNotificationConfigRequest.ChatID,
-		Keywords: createNotificationConfigRequest.Keywords,
+		UserID:          userID,
+		Token:           createNotificationConfigRequest.Token,
+		ChatID:          createNotificationConfigRequest.ChatID,
+		Keywords:        createNotificationConfigRequest.Keywords,
+		DiscordClientID: createNotificationConfigRequest.DiscordClientID,
 	}
 	if configID, err = h.notificationService.CreateNotificationConfig(createNotificationDto); err != nil {
 		response := &common.CommonErrorResponse{
