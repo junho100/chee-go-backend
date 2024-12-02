@@ -37,9 +37,10 @@ type CreateNotificationConfigResponse struct {
 }
 
 type GetNotificationConfigResponse struct {
-	Token    string   `json:"token"`
-	ChatID   string   `json:"chat_id"`
-	Keywords []string `json:"keywords"`
+	Token           string   `json:"token"`
+	ChatID          string   `json:"chat_id"`
+	Keywords        []string `json:"keywords"`
+	DiscordClientID string   `json:"discord_client_id"`
 }
 
 type SendNotificationMessageDto struct {

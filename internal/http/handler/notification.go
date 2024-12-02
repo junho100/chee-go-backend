@@ -152,9 +152,10 @@ func (h *NotificationHandler) GetNotificationConfig(c *gin.Context) {
 	keywords := h.notificationService.GetKeywordsByNotificationID(notificationConfig.ID)
 
 	getNotificationConfigResponse := dto.GetNotificationConfigResponse{
-		Token:    notificationConfig.TelegramToken,
-		ChatID:   notificationConfig.TelegramChatID,
-		Keywords: keywords,
+		Token:           notificationConfig.TelegramToken,
+		ChatID:          notificationConfig.TelegramChatID,
+		Keywords:        keywords,
+		DiscordClientID: notificationConfig.DiscordClientID,
 	}
 	c.JSON(http.StatusOK, getNotificationConfigResponse)
 }
