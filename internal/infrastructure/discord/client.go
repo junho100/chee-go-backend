@@ -13,6 +13,8 @@ import (
 
 type DiscordClient interface {
 	ValidateClientID(clientID string) bool
+	SendMessage(clientID string, message string) error
+	SendNotificationMessage(clientID string, title string, url string, date time.Time) error
 }
 
 type discordClient struct {
@@ -36,6 +38,31 @@ func (c *discordClient) ValidateClientID(clientID string) bool {
 	}
 
 	return true
+}
+
+func (c *discordClient) SendMessage(clientID string, message string) error {
+	// DM 채널 생성
+	channel, err := c.session.UserChannelCreate(clientID)
+	if err != nil {
+		return fmt.Errorf("DM 채널 생성 실패: %v", err)
+	}
+
+	// 메시지 전송
+	_, err = c.session.ChannelMessageSend(channel.ID, message)
+	if err != nil {
+		return fmt.Errorf("메시지 전송 실패: %v", err)
+	}
+
+	return nil
+}
+
+func (c *discordClient) SendNotificationMessage(clientID string, title string, url string, date time.Time) error {
+	messageText := fmt.Sprintf("[취Go 알림]\n공지사항\n제목: %s\n링크: %s\n작성일: %s",
+		title,
+		url,
+		date.Format("2006-01-02"))
+
+	return c.SendMessage(clientID, messageText)
 }
 
 func NewDiscordClient() (DiscordClient, error) {

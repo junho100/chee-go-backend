@@ -52,6 +52,7 @@ func main() {
 	cronJob := cron.NewCronJob(
 		notificationService,
 		telegramClient,
+		discordClient,
 		notificationStatus,
 		crawler,
 	)
