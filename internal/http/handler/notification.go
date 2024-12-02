@@ -4,6 +4,7 @@ import (
 	"chee-go-backend/internal/common"
 	"chee-go-backend/internal/domain/service"
 	"chee-go-backend/internal/http/dto"
+	"chee-go-backend/internal/infrastructure/discord"
 	"chee-go-backend/internal/infrastructure/telegram"
 	"net/http"
 
@@ -12,13 +13,16 @@ import (
 
 type NotificationHandler struct {
 	telegramClient      telegram.TelegramClient
+	discordClient       discord.DiscordClient
 	userService         service.UserService
 	notificationService service.NotificationService
 }
 
-func NewNotificationHandler(router *gin.Engine, telegramClient telegram.TelegramClient, userService service.UserService, notificationService service.NotificationService) {
+func NewNotificationHandler(router *gin.Engine, telegramClient telegram.TelegramClient, discordClient discord.DiscordClient, userService service.UserService, notificationService service.NotificationService) {
 	handler := &NotificationHandler{
+
 		telegramClient:      telegramClient,
+		discordClient:       discordClient,
 		userService:         userService,
 		notificationService: notificationService,
 	}
@@ -28,6 +32,7 @@ func NewNotificationHandler(router *gin.Engine, telegramClient telegram.Telegram
 	router.POST("/api/notifications/config", handler.CreateNotificationConfig)
 	router.GET("/api/notifications/config", handler.GetNotificationConfig)
 	router.GET("/api/notifications/:id", handler.GetNotificationByID)
+	router.POST("/api/notifications/validate-discord-client-id", handler.ValidateDiscordClientID)
 }
 
 func (h *NotificationHandler) ValidateToken(c *gin.Context) {
@@ -96,10 +101,11 @@ func (h *NotificationHandler) CreateNotificationConfig(c *gin.Context) {
 	}
 
 	createNotificationDto := dto.CreateNotificationConfigDto{
-		UserID:   userID,
-		Token:    createNotificationConfigRequest.Token,
-		ChatID:   createNotificationConfigRequest.ChatID,
-		Keywords: createNotificationConfigRequest.Keywords,
+		UserID:          userID,
+		Token:           createNotificationConfigRequest.Token,
+		ChatID:          createNotificationConfigRequest.ChatID,
+		Keywords:        createNotificationConfigRequest.Keywords,
+		DiscordClientID: createNotificationConfigRequest.DiscordClientID,
 	}
 	if configID, err = h.notificationService.CreateNotificationConfig(createNotificationDto); err != nil {
 		response := &common.CommonErrorResponse{
@@ -147,9 +153,10 @@ func (h *NotificationHandler) GetNotificationConfig(c *gin.Context) {
 	keywords := h.notificationService.GetKeywordsByNotificationID(notificationConfig.ID)
 
 	getNotificationConfigResponse := dto.GetNotificationConfigResponse{
-		Token:    notificationConfig.TelegramToken,
-		ChatID:   notificationConfig.TelegramChatID,
-		Keywords: keywords,
+		Token:           notificationConfig.TelegramToken,
+		ChatID:          notificationConfig.TelegramChatID,
+		Keywords:        keywords,
+		DiscordClientID: notificationConfig.DiscordClientID,
 	}
 	c.JSON(http.StatusOK, getNotificationConfigResponse)
 }
@@ -176,4 +183,21 @@ func (h *NotificationHandler) GetNotificationByID(c *gin.Context) {
 
 	response := dto.GetNotificationByIDResponse(*notification)
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *NotificationHandler) ValidateDiscordClientID(c *gin.Context) {
+	var validateDiscordClientIDRequest dto.ValidateDiscordClientIDRequest
+
+	if err := c.BindJSON(&validateDiscordClientIDRequest); err != nil {
+		response := &common.CommonErrorResponse{
+			Message: "bad content.",
+		}
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	validateDiscordClientIDResponse := dto.ValidateDiscordClientIDResponse{
+		IsValid: h.discordClient.ValidateClientID(validateDiscordClientIDRequest.ClientID),
+	}
+	c.JSON(http.StatusCreated, validateDiscordClientIDResponse)
 }

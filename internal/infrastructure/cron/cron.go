@@ -5,6 +5,7 @@ import (
 	"chee-go-backend/internal/domain/service"
 	"chee-go-backend/internal/http/dto"
 	"chee-go-backend/internal/infrastructure/crawler"
+	"chee-go-backend/internal/infrastructure/discord"
 	"chee-go-backend/internal/infrastructure/redis"
 	"chee-go-backend/internal/infrastructure/telegram"
 	"fmt"
@@ -22,11 +23,12 @@ type CronJob struct {
 	cron                *cron.Cron
 	notificationService service.NotificationService
 	telegramClient      telegram.TelegramClient
+	discordClient       discord.DiscordClient
 	notificationStatus  redis.NotificationStatus
 	crawler             crawler.Crawler
 }
 
-func NewCronJob(notificationService service.NotificationService, telegramClient telegram.TelegramClient, notificationStatus redis.NotificationStatus, crawler crawler.Crawler) *CronJob {
+func NewCronJob(notificationService service.NotificationService, telegramClient telegram.TelegramClient, discordClient discord.DiscordClient, notificationStatus redis.NotificationStatus, crawler crawler.Crawler) *CronJob {
 	// UTC+9 시간으로 고정 설정
 	loc := time.FixedZone("KST", 9*60*60) // UTC+9 시간
 
@@ -35,6 +37,7 @@ func NewCronJob(notificationService service.NotificationService, telegramClient 
 		cron:                c,
 		notificationService: notificationService,
 		telegramClient:      telegramClient,
+		discordClient:       discordClient,
 		notificationStatus:  notificationStatus,
 		crawler:             crawler,
 	}
@@ -112,21 +115,37 @@ func (c *CronJob) Start() {
 				} else {
 					url = os.Getenv("CLIENT_BASE_URL")
 				}
+				noticeUrl := fmt.Sprintf("%s/notification/%s", url, notice.ID)
 
-				sendNotificationMessageDto := dto.SendNotificationMessageDto{
-					Title:  notice.Title,
-					Date:   notice.Date,
-					Url:    fmt.Sprintf("%s/notification/%s", url, notice.ID),
-					Token:  config.TelegramToken,
-					ChatID: config.TelegramChatID,
+				// Telegram 알림 전송 (기존 토큰이 있는 경우)
+				if config.TelegramToken != "" && config.TelegramChatID != "" {
+					sendNotificationMessageDto := dto.SendNotificationMessageDto{
+						Title:  notice.Title,
+						Date:   notice.Date,
+						Url:    noticeUrl,
+						Token:  config.TelegramToken,
+						ChatID: config.TelegramChatID,
+					}
+
+					if err := c.telegramClient.SendNotificationMessage(sendNotificationMessageDto); err != nil {
+						log.Printf("텔레그램 알림 전송 실패 (사용자: %s, 공지: %s): %v", config.UserID, notice.ID, err)
+					}
 				}
 
-				if err := c.telegramClient.SendNotificationMessage(sendNotificationMessageDto); err != nil {
-					log.Printf("알림 전송 실패 (사용자: %s, 공지: %s): %v", config.UserID, notice.ID, err)
-					continue
+				// Discord 알림 전송 (Discord Client ID가 있는 경우)
+				if config.DiscordClientID != "" {
+					if err := c.discordClient.SendNotificationMessage(
+						config.DiscordClientID,
+						notice.Title,
+						noticeUrl,
+						notice.Date,
+					); err != nil {
+						log.Printf("Discord 알림 전송 실패 (사용자: %s, 공지: %s): %v", config.UserID, notice.ID, err)
+						continue
+					}
 				}
 
-				// 5. 알림 처리 상태를 Redis에 저장
+				// 알림 처리 상태를 Redis에 저장
 				if err := c.notificationStatus.MarkAsProcessed(config.UserID, notice.ID); err != nil {
 					log.Printf("알림 상태 저장 실패 (사용자: %s, 공지: %s): %v", config.UserID, notice.ID, err)
 				}

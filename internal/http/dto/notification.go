@@ -20,16 +20,18 @@ type ValidateChatIDResponse struct {
 }
 
 type CreateNotificationConfigRequest struct {
-	Token    string   `json:"token"`
-	ChatID   string   `json:"chat_id"`
-	Keywords []string `json:"keywords"`
+	Token           string   `json:"token"`
+	ChatID          string   `json:"chat_id"`
+	Keywords        []string `json:"keywords"`
+	DiscordClientID string   `json:"discord_client_id"`
 }
 
 type CreateNotificationConfigDto struct {
-	UserID   string
-	Token    string
-	ChatID   string
-	Keywords []string
+	UserID          string
+	Token           string
+	ChatID          string
+	Keywords        []string
+	DiscordClientID string
 }
 
 type CreateNotificationConfigResponse struct {
@@ -37,9 +39,10 @@ type CreateNotificationConfigResponse struct {
 }
 
 type GetNotificationConfigResponse struct {
-	Token    string   `json:"token"`
-	ChatID   string   `json:"chat_id"`
-	Keywords []string `json:"keywords"`
+	Token           string   `json:"token"`
+	ChatID          string   `json:"chat_id"`
+	Keywords        []string `json:"keywords"`
+	DiscordClientID string   `json:"discord_client_id"`
 }
 
 type SendNotificationMessageDto struct {
@@ -64,4 +67,12 @@ type GetNotificationByIDResponse struct {
 	Date    time.Time `json:"date"`
 	Content string    `json:"content"`
 	Url     string    `json:"url"`
+}
+
+type ValidateDiscordClientIDRequest struct {
+	ClientID string `json:"client_id"`
+}
+
+type ValidateDiscordClientIDResponse struct {
+	IsValid bool `json:"is_valid"`
 }

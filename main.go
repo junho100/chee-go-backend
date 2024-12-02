@@ -6,11 +6,13 @@ import (
 	"chee-go-backend/internal/http/router"
 	"chee-go-backend/internal/infrastructure/crawler"
 	"chee-go-backend/internal/infrastructure/cron"
+	"chee-go-backend/internal/infrastructure/discord"
 	"chee-go-backend/internal/infrastructure/redis"
 	"chee-go-backend/internal/infrastructure/telegram"
 	"chee-go-backend/internal/infrastructure/youtube"
 	"chee-go-backend/internal/repository"
 	"chee-go-backend/internal/service"
+	"log"
 )
 
 func main() {
@@ -35,17 +37,22 @@ func main() {
 
 	youtubeClient := youtube.NewYoutubeClient(cfg.YoutubeService)
 	telegramClient := telegram.NewTelegramClient()
+	discordClient, err := discord.NewDiscordClient()
+	if err != nil {
+		log.Fatalf("Discord 클라이언트 초기화 실패: %v", err)
+	}
 
 	handler.NewLectureHandler(router, lectureService, youtubeClient)
 	handler.NewResumeHandler(router, resumeService, userService)
 	handler.NewUserHandler(router, userService)
 	handler.NewHealthCheck(router)
-	handler.NewNotificationHandler(router, telegramClient, userService, notificationService)
+	handler.NewNotificationHandler(router, telegramClient, discordClient, userService, notificationService)
 
 	// Cron job 시작
 	cronJob := cron.NewCronJob(
 		notificationService,
 		telegramClient,
+		discordClient,
 		notificationStatus,
 		crawler,
 	)

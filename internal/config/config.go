@@ -77,6 +77,11 @@ func NewConfig() *Config {
 		DB:   0,
 	})
 
+	// Discord 봇 토큰 검증
+	if os.Getenv("DISCORD_BOT_TOKEN") == "" {
+		log.Fatal("DISCORD_BOT_TOKEN이 설정되지 않았습니다")
+	}
+
 	return &Config{
 		DB:                 db,
 		YoutubeService:     service,
