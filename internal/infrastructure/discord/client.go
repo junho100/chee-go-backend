@@ -1,10 +1,12 @@
 package discord
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -42,34 +44,41 @@ func NewDiscordClient() (DiscordClient, error) {
 		return nil, fmt.Errorf("DISCORD_BOT_TOKEN이 설정되지 않았습니다")
 	}
 
-	// Discord 세션 생성
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, fmt.Errorf("Discord 세션 생성 실패: %v", err)
 	}
 
-	// 봇이 준비될 때까지 기다리기 위한 WaitGroup
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	// Ready 이벤트 핸들러 등록
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Discord 봇 '%s' 준비 완료", s.State.User.Username)
 		wg.Done()
 	})
 
-	// 봇이 메시지를 받을 수 있도록 Intents 설정
 	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages
 
-	// 봇 연결
 	if err := discord.Open(); err != nil {
 		return nil, fmt.Errorf("Discord 연결 실패: %v", err)
 	}
 
-	// 봇이 준비될 때까지 대기
-	wg.Wait()
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
 
-	return &discordClient{
-		session: discord,
-	}, nil
+	select {
+	case <-ctx.Done():
+		discord.Close()
+		return nil, fmt.Errorf("Discord 봇 준비 시간 초과 (30초)")
+	case <-done:
+		return &discordClient{
+			session: discord,
+		}, nil
+	}
 }
