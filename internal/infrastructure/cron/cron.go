@@ -100,10 +100,22 @@ func (c *CronJob) Start() {
 				now := time.Now().In(c.cron.Location())
 				checkTime := now.Format("2006-01-02 15:04")
 				message := fmt.Sprintf("[취Go 알림]\n발견된 공지사항이 없습니다.\n확인 시각: %s", checkTime)
-				encodedText := url.QueryEscape(message)
-				if err := c.telegramClient.SendMessage(config.TelegramToken, config.TelegramChatID, encodedText); err != nil {
-					log.Printf("알림 전송 실패 (사용자: %s): %v", config.UserID, err)
+
+				// Telegram 알림 전송
+				if config.TelegramToken != "" && config.TelegramChatID != "" {
+					encodedText := url.QueryEscape(message)
+					if err := c.telegramClient.SendMessage(config.TelegramToken, config.TelegramChatID, encodedText); err != nil {
+						log.Printf("텔레그램 알림 전송 실패 (사용자: %s): %v", config.UserID, err)
+					}
 				}
+
+				// Discord 알림 전송
+				if config.DiscordClientID != "" {
+					if err := c.discordClient.SendMessage(config.DiscordClientID, message); err != nil {
+						log.Printf("Discord 알림 전송 실패 (사용자: %s): %v", config.UserID, err)
+					}
+				}
+
 				continue
 			}
 
