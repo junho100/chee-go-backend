@@ -23,7 +23,7 @@ type telegramClient struct {
 
 func (c *telegramClient) SendMessage(token string, chatID string, message string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%s&text=%s", c.ApiUrl, token, chatID, message)
+	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%s&text=%s", c.ApiUrl, token, url.QueryEscape(chatID), message)
 
 	resp, err := client.Get(url)
 	if err != nil {
@@ -100,10 +100,10 @@ func (c *telegramClient) ValidateToken(token string) bool {
 }
 
 func (c *telegramClient) ValidateChatID(token string, chatID string) bool {
-	testMessage := "[취Go 알림]\nChat ID 확인 중..."
+	testMessage := url.QueryEscape("[취Go 알림]\nChat ID 확인 중...")
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%s&text=%s", c.ApiUrl, token, chatID, testMessage)
+	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%s&text=%s", c.ApiUrl, token, url.QueryEscape(chatID), testMessage)
 
 	resp, err := client.Get(url)
 	if err != nil {
