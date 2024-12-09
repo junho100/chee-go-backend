@@ -29,6 +29,10 @@ func NewDB() (*gorm.DB, func()) {
 		&entity.WorkExperienceDetail{},
 		&entity.Subject{},
 		&entity.Lecture{},
+		&entity.NotificationConfig{},
+		&entity.NotificationKeyword{},
+		&entity.NotificationConfigKeyword{},
+		&entity.SchoolNotification{},
 	)
 
 	// cleanup 함수 정의
