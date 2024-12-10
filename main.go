@@ -7,12 +7,14 @@ import (
 	"chee-go-backend/internal/infrastructure/crawler"
 	"chee-go-backend/internal/infrastructure/cron"
 	"chee-go-backend/internal/infrastructure/discord"
+	"chee-go-backend/internal/infrastructure/monitoring"
 	"chee-go-backend/internal/infrastructure/redis"
 	"chee-go-backend/internal/infrastructure/telegram"
 	"chee-go-backend/internal/infrastructure/youtube"
 	"chee-go-backend/internal/repository"
 	"chee-go-backend/internal/service"
 	"log"
+	"os"
 )
 
 func main() {
@@ -48,6 +50,17 @@ func main() {
 	handler.NewHealthCheck(router)
 	handler.NewNotificationHandler(router, telegramClient, discordClient, userService, notificationService)
 
+	var batchMetrics *monitoring.BatchMetrics
+
+	// 로컬 환경이 아닐 때만 모니터링 활성화
+	if os.Getenv("GO_ENV") != "local" {
+		cloudwatch, err := monitoring.NewCloudWatchClient()
+		if err != nil {
+			log.Fatalf("CloudWatch 클라이언트 초기화 실패: %v", err)
+		}
+		batchMetrics = monitoring.NewBatchMetrics(cloudwatch)
+	}
+
 	// Cron job 시작
 	cronJob := cron.NewCronJob(
 		notificationService,
@@ -56,8 +69,23 @@ func main() {
 		notificationStatus,
 		crawler,
 	)
+
 	if cronJob != nil {
-		cronJob.Start()
+		if batchMetrics != nil {
+			// 프로덕션 환경: 모니터링 활성화
+			go func() {
+				err := batchMetrics.TrackBatchJob("DailyNotificationDelivery", func() error {
+					cronJob.Start()
+					return nil
+				})
+				if err != nil {
+					log.Printf("배치 작업 실행 실패: %v", err)
+				}
+			}()
+		} else {
+			// 로컬 환경: 모니터링 없이 실행
+			cronJob.Start()
+		}
 		defer cronJob.Stop()
 	}
 
