@@ -71,21 +71,24 @@ func main() {
 	)
 
 	if cronJob != nil {
-		if batchMetrics != nil {
-			// 프로덕션 환경: 모니터링 활성화
-			go func() {
-				err := batchMetrics.TrackBatchJob("DailyNotificationDelivery", func() error {
-					cronJob.Start()
-					return nil
+		go func() {
+			if batchMetrics != nil {
+				// 프로덕션 환경: 각 크론 작업 실행을 모니터링
+				cronJob.SetJobWrapper(func(job func()) func() {
+					return func() {
+						err := batchMetrics.TrackBatchJob("DailyNotificationDelivery", func() error {
+							job()
+							return nil
+						})
+						if err != nil {
+							log.Printf("배치 작업 메트릭 기록 실패: %v", err)
+						}
+					}
 				})
-				if err != nil {
-					log.Printf("배치 작업 실행 실패: %v", err)
-				}
-			}()
-		} else {
-			// 로컬 환경: 모니터링 없이 실행
+			}
+			// 크론 작업 시작
 			cronJob.Start()
-		}
+		}()
 		defer cronJob.Stop()
 	}
 
