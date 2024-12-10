@@ -26,6 +26,7 @@ type CronJob struct {
 	discordClient       discord.DiscordClient
 	notificationStatus  redis.NotificationStatus
 	crawler             crawler.Crawler
+	jobWrapper          func(job func()) func()
 }
 
 func NewCronJob(notificationService service.NotificationService, telegramClient telegram.TelegramClient, discordClient discord.DiscordClient, notificationStatus redis.NotificationStatus, crawler crawler.Crawler) *CronJob {
@@ -43,9 +44,13 @@ func NewCronJob(notificationService service.NotificationService, telegramClient 
 	}
 }
 
+func (c *CronJob) SetJobWrapper(wrapper func(job func()) func()) {
+	c.jobWrapper = wrapper
+}
+
 func (c *CronJob) Start() {
 	// 매일 오전 11시에 실행 (KST)
-	c.cron.AddFunc("0 11 * * *", func() {
+	job := func() {
 		// 1. 오늘 올라온 모든 공지사항 크롤링 및 DB 저장
 		deptNotices, err := c.crawler.FetchDepartmentNotices()
 		if err != nil {
@@ -163,8 +168,14 @@ func (c *CronJob) Start() {
 				}
 			}
 		}
-	})
+	}
 
+	// jobWrapper가 설정되어 있다면 적용
+	if c.jobWrapper != nil {
+		job = c.jobWrapper(job)
+	}
+
+	c.cron.AddFunc("0 11 * * *", job)
 	c.cron.Start()
 	log.Println("Cron job started (KST - runs at 11:00 AM)")
 }

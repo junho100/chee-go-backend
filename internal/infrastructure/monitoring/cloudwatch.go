@@ -15,7 +15,9 @@ type CloudWatchClient struct {
 }
 
 func NewCloudWatchClient() (*CloudWatchClient, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("ap-northeast-2"),
+	)
 	if err != nil {
 		return nil, err
 	}
