@@ -68,9 +68,10 @@ func (c *crawler) FetchSchoolNotices() ([]entity.SchoolNotification, error) {
 	}
 
 	var notices []entity.SchoolNotification
-	today := time.Now().In(time.FixedZone("KST", 9*60*60)).Format("2006.01.02")
+	// 어제 날짜로 변경
+	yesterday := time.Now().In(time.FixedZone("KST", 9*60*60)).AddDate(0, 0, -1).Format("2006.01.02")
 
-	log.Printf("학교 공지사항 크롤링 시작 - URL: %s, 오늘 날짜: %s", c.SchoolNoticeURL, today)
+	log.Printf("학교 공지사항 크롤링 시작 - URL: %s, 어제 날짜: %s", c.SchoolNoticeURL, yesterday)
 
 	// 기본 URL 추출 (쿼리스트링 제외)
 	baseURL := c.SchoolNoticeURL
@@ -83,8 +84,8 @@ func (c *crawler) FetchSchoolNotices() ([]entity.SchoolNotification, error) {
 		dateStr := strings.TrimSpace(s.Find("td:nth-child(4)").Text())
 		log.Printf("발견된 날짜: '%s'", dateStr)
 
-		// 날짜 형식이 YYYY.MM.DD 형식임
-		if dateStr != today {
+		// 날짜 비교를 어제 날짜로 변경
+		if dateStr != yesterday {
 			return
 		}
 
@@ -180,9 +181,10 @@ func (c *crawler) fetchDeptNoticesFromURL(url string, prefix string) ([]entity.S
 	}
 
 	var notices []entity.SchoolNotification
-	today := time.Now().In(time.FixedZone("KST", 9*60*60)).Format("2006.01.02")
+	// 어제 날짜로 변경
+	yesterday := time.Now().In(time.FixedZone("KST", 9*60*60)).AddDate(0, 0, -1).Format("2006.01.02")
 
-	log.Printf("학과 공지사항 크롤링 시작 - URL: %s, 오늘 날짜: %s", url, today)
+	log.Printf("학과 공지사항 크롤링 시작 - URL: %s, 어제 날짜: %s", url, yesterday)
 
 	// 기본 URL 추출 (쿼리스트링 제외)
 	baseURL := url
@@ -195,8 +197,8 @@ func (c *crawler) fetchDeptNoticesFromURL(url string, prefix string) ([]entity.S
 		dateStr := strings.TrimSpace(s.Find("td:nth-child(4)").Text())
 		log.Printf("발견된 날짜: '%s'", dateStr)
 
-		// 날짜 형식이 YYYY.MM.DD 형식임
-		if dateStr != today {
+		// 날짜 비교를 어제 날짜로 변경
+		if dateStr != yesterday {
 			return
 		}
 

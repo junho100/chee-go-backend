@@ -51,7 +51,7 @@ func (c *CronJob) SetJobWrapper(wrapper func(job func()) func()) {
 func (c *CronJob) Start() {
 	// 매일 오전 11시에 실행 (KST)
 	job := func() {
-		// 1. 오늘 올라온 모든 공지사항 크롤링 및 DB 저장
+		// 1. 어제 올라온 모든 공지사항 크롤링 및 DB 저장
 		deptNotices, err := c.crawler.FetchDepartmentNotices()
 		if err != nil {
 			log.Println("학과 공지사항 크롤링 실패:", err)
@@ -177,7 +177,7 @@ func (c *CronJob) Start() {
 
 	c.cron.AddFunc("0 11 * * *", job)
 	c.cron.Start()
-	log.Println("Cron job started (KST - runs at 11:00 AM)")
+	log.Println("Cron job started (KST - runs at 11:00 AM, fetches yesterday's notices)")
 }
 
 func (c *CronJob) Stop() {
