@@ -2,6 +2,7 @@ package monitoring
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -27,6 +28,17 @@ func NewCloudWatchClient() (*CloudWatchClient, error) {
 }
 
 func (c *CloudWatchClient) PutMetric(namespace, metricName string, value float64, unit types.StandardUnit, dimensions []types.Dimension) error {
+	if len(dimensions) > 0 {
+		for _, dim := range dimensions {
+			if dim.Name == nil || *dim.Name == "" {
+				return fmt.Errorf("dimension name이 비어있습니다")
+			}
+			if dim.Value == nil || *dim.Value == "" {
+				return fmt.Errorf("dimension value가 비어있습니다")
+			}
+		}
+	}
+
 	now := time.Now()
 
 	input := &cloudwatch.PutMetricDataInput{
