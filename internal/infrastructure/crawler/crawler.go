@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/google/uuid"
 )
 
 const (
@@ -123,11 +124,12 @@ func (c *crawler) FetchSchoolNotices() ([]entity.SchoolNotification, error) {
 		}
 
 		notice := entity.SchoolNotification{
-			ID:      id,
-			Title:   title,
-			Url:     fullURL,
-			Date:    parseDate(dateStr),
-			Content: content,
+			UniqueID: uuid.New().String(),
+			ID:       id,
+			Title:    title,
+			Url:      fullURL,
+			Date:     parseDate(dateStr),
+			Content:  content,
 		}
 
 		notices = append(notices, notice)
@@ -236,11 +238,12 @@ func (c *crawler) fetchDeptNoticesFromURL(url string, prefix string) ([]entity.S
 		}
 
 		notice := entity.SchoolNotification{
-			ID:      id,
-			Title:   title,
-			Url:     fullURL,
-			Date:    parseDate(dateStr),
-			Content: content,
+			UniqueID: uuid.New().String(),
+			ID:       id,
+			Title:    title,
+			Url:      fullURL,
+			Date:     parseDate(dateStr),
+			Content:  content,
 		}
 
 		notices = append(notices, notice)

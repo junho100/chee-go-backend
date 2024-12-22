@@ -15,7 +15,7 @@ type notificationRepository struct {
 func (r *notificationRepository) FindNotificationByID(notification *entity.SchoolNotification, id string) error {
 	if err := r.db.Where(&entity.SchoolNotification{
 		ID: id,
-	}).First(notification).Error; err != nil {
+	}).Order("date DESC").First(notification).Error; err != nil {
 		return err
 	}
 
@@ -130,26 +130,26 @@ func (r *notificationRepository) SaveNotifications(notifications []entity.School
 		return nil
 	}
 
-	// 중복 체크를 위한 기존 ID 조회
-	var existingIDs []string
+	// 중복 체크를 위한 기존 UniqueID 조회
+	var existingUniqueIDs []string
 	for _, notice := range notifications {
 		var exists bool
 		err := r.db.Model(&entity.SchoolNotification{}).
 			Select("count(*) > 0").
-			Where("id = ?", notice.ID).
+			Where("unique_id = ?", notice.UniqueID).
 			Find(&exists).Error
 		if err != nil {
 			return err
 		}
 		if exists {
-			existingIDs = append(existingIDs, notice.ID)
+			existingUniqueIDs = append(existingUniqueIDs, notice.UniqueID)
 		}
 	}
 
 	// 중복되지 않은 공지사항만 필터링
 	var newNotifications []entity.SchoolNotification
 	for _, notice := range notifications {
-		if !contains(existingIDs, notice.ID) {
+		if !contains(existingUniqueIDs, notice.UniqueID) {
 			newNotifications = append(newNotifications, notice)
 		}
 	}

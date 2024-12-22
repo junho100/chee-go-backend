@@ -62,11 +62,12 @@ type FetchSchoolNoticeDto struct {
 }
 
 type GetNotificationByIDResponse struct {
-	ID      string    `json:"id"`
-	Title   string    `json:"title"`
-	Date    time.Time `json:"date"`
-	Content string    `json:"content"`
-	Url     string    `json:"url"`
+	UniqueID string    `json:"unique_id"`
+	ID       string    `json:"id"`
+	Title    string    `json:"title"`
+	Date     time.Time `json:"date"`
+	Content  string    `json:"content"`
+	Url      string    `json:"url"`
 }
 
 type ValidateDiscordClientIDRequest struct {
