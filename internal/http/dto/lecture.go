@@ -20,6 +20,8 @@ type GetLecturesResponseSubject struct {
 	Description  string `json:"description"`
 	ThumbnailURL string `json:"thumbnailUrl"`
 	Instructor   string `json:"instructor"`
+	TargetGrade  uint   `json:"targetGrade"`
+	IsForSchool  bool   `json:"isForSchool"`
 }
 
 type GetLectureResponse struct {

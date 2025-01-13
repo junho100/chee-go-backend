@@ -87,6 +87,8 @@ func (h *LectureHandler) GetAllSubjects(c *gin.Context) {
 			Description:  subject.Name,
 			ThumbnailURL: subject.ThumbnailURL,
 			Instructor:   subject.LecturerName,
+			TargetGrade:  subject.TargetGrade,
+			IsForSchool:  subject.IsForSchool,
 		}
 	}
 

@@ -7,6 +7,8 @@ type Subject struct {
 	ThumbnailURL      string `gorm:"column:thumbnail_url;type:text"`
 	YoutubePlayListID string `gorm:"column:youtube_playlist_id"`
 	SubjectName       string `gorm:"subject_name"`
+	IsForSchool       bool   `gorm:"column:is_for_school;default:false"`
+	TargetGrade       uint   `gorm:"column:target_grade"`
 	Lectures          []Lecture
 }
 
