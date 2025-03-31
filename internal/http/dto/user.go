@@ -7,7 +7,7 @@ type SignUpRequest struct {
 }
 
 type SignUpResponse struct {
-	ID string
+	ID string `json:"id"`
 }
 
 type CreateUserDto struct {
